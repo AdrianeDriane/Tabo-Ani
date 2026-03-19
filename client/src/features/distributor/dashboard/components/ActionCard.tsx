@@ -1,7 +1,7 @@
-import type { ActionCard as ActionCardType } from "../types/distributorDashboard.types";
+import type { ActionCardData } from "../types/distributorDashboard.types";
 
 type ActionCardProps = {
-  card: ActionCardType;
+  card: ActionCardData;
 };
 
 export default function ActionCard({ card }: ActionCardProps) {

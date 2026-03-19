@@ -16,7 +16,7 @@ export {
 } from "./utils/distributorDashboard.constants";
 
 export type {
-  ActionCard,
+  ActionCardData,
   ActiveDelivery,
   DeliveryTab,
   Kpi,

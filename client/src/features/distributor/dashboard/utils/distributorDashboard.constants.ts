@@ -1,5 +1,5 @@
 import type {
-  ActionCard,
+  ActionCardData,
   ActiveDelivery,
   DeliveryTab,
   Kpi,
@@ -55,7 +55,7 @@ export const activeDelivery: ActiveDelivery = {
   payout: "₱2,500.00",
 };
 
-export const actionCards: ActionCard[] = [
+export const actionCards: ActionCardData[] = [
   {
     id: "qa",
     title: "Quality Assurance",

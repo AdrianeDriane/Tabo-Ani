@@ -22,7 +22,7 @@ export type ActiveDelivery = {
   payout: string;
 };
 
-export type ActionCard = {
+export type ActionCardData = {
   id: string;
   title: string;
   description: string;
