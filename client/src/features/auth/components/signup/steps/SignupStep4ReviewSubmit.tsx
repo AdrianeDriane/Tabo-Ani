@@ -20,8 +20,8 @@ export function SignupStep4ReviewSubmit({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-100 bg-agri-light p-6">
+    <div className="space-y-5 sm:space-y-6">
+      <div className="rounded-2xl border border-slate-100 bg-agri-light p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <h4 className="font-bold text-slate-900">Your Account Details</h4>
           <button
@@ -47,7 +47,7 @@ export function SignupStep4ReviewSubmit({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-100 bg-agri-light p-6">
+      <div className="rounded-2xl border border-slate-100 bg-agri-light p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <h4 className="font-bold text-slate-900">Your Profile Information</h4>
           <button
@@ -84,7 +84,7 @@ export function SignupStep4ReviewSubmit({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-100 bg-agri-light p-6">
+      <div className="rounded-2xl border border-slate-100 bg-agri-light p-5 sm:p-6">
         <div className="mb-4 flex items-center justify-between">
           <h4 className="font-bold text-slate-900">Identity Verification Status</h4>
           <button
@@ -154,14 +154,14 @@ export function SignupStep4ReviewSubmit({
           <button
             type="submit"
             disabled={!hasAcceptedTerms || !hasAcceptedPrivacy}
-            className="flex-1 rounded-full bg-agri-accent py-4 font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.02] hover:bg-agri-accent/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-agri-accent/40 disabled:shadow-none"
+            className="flex-1 rounded-full bg-agri-accent py-3.5 text-sm font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.02] hover:bg-agri-accent/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-agri-accent/40 disabled:shadow-none sm:py-4 sm:text-base"
           >
             {step.ctaLabel}
           </button>
           <button
             type="button"
             onClick={onBack}
-            className="flex-1 rounded-full bg-slate-100 py-4 font-bold text-slate-600 transition-all hover:bg-slate-200"
+            className="flex-1 rounded-full bg-slate-100 py-3.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200 sm:py-4 sm:text-base"
           >
             Review KYC Details
           </button>

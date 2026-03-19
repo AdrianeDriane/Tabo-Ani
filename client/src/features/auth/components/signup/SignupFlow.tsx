@@ -56,6 +56,7 @@ export function SignupFlow() {
       stepHelperText={currentStepDefinition.helperText}
       contentContainerClassName={currentStepDefinition.contentContainerClassName}
       brandPanelContent={currentStepDefinition.brandPanel}
+      showLoginPrompt={currentStep === 1}
     >
       <CurrentStepComponent
         step={currentStepDefinition}

@@ -15,10 +15,10 @@ export function SignupStep1Credentials({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <button
         type="button"
-        className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 sm:py-3 sm:text-base"
       >
         <svg viewBox="0 0 24 24" className="size-5" aria-hidden="true">
           <path
@@ -49,7 +49,7 @@ export function SignupStep1Credentials({
         <div className="grow border-t border-slate-200" />
       </div>
 
-      <form className="space-y-4" onSubmit={handleSubmit}>
+      <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit}>
         <div>
           <label
             htmlFor="signup-email"
@@ -72,7 +72,7 @@ export function SignupStep1Credentials({
           >
             Mobile Number
           </label>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
               <span className="absolute top-1/2 left-4 -translate-y-1/2 font-medium text-slate-500">
                 +63
@@ -86,7 +86,7 @@ export function SignupStep1Credentials({
             </div>
             <button
               type="button"
-              className="rounded-xl border border-agri-leaf/30 px-4 py-2 text-sm font-bold text-agri-leaf transition-colors hover:bg-agri-leaf/5"
+              className="rounded-xl border border-agri-leaf/30 px-4 py-2 text-xs font-bold text-agri-leaf transition-colors hover:bg-agri-leaf/5 sm:text-sm"
             >
               Send OTP
             </button>
@@ -151,10 +151,10 @@ export function SignupStep1Credentials({
           </div>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-3 sm:pt-4">
           <button
             type="submit"
-            className="w-full rounded-full bg-agri-accent py-4 font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.02] hover:bg-agri-accent/90 active:scale-[0.98]"
+            className="w-full rounded-full bg-agri-accent py-3.5 text-sm font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.02] hover:bg-agri-accent/90 active:scale-[0.98] sm:py-4 sm:text-base"
           >
             {step.ctaLabel}
           </button>

@@ -49,7 +49,7 @@ export function SignupStep2ProfileDetails({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {SIGNUP_ROLES.map((role) => {
           const isActive = selectedRole === role.value;
@@ -58,7 +58,7 @@ export function SignupStep2ProfileDetails({
               key={role.value}
               type="button"
               onClick={() => setSelectedRole(role.value)}
-              className={`group cursor-pointer rounded-2xl p-5 text-left transition-all ${
+              className={`group cursor-pointer rounded-2xl p-4 text-left transition-all sm:p-5 ${
                 isActive
                   ? "border-2 border-agri-earth bg-white ring-1 ring-agri-earth shadow-lg shadow-agri-leaf/10"
                   : "border-2 border-slate-100 bg-stone-50 hover:border-slate-200"
@@ -72,7 +72,7 @@ export function SignupStep2ProfileDetails({
                       : "bg-slate-200/50 text-slate-500"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-3xl">
+                  <span className="material-symbols-outlined text-2xl sm:text-3xl">
                     {role.icon}
                   </span>
                 </div>
@@ -84,14 +84,14 @@ export function SignupStep2ProfileDetails({
                 ) : null}
               </div>
 
-              <h3 className="text-lg font-bold text-slate-900">{role.label}</h3>
+              <h3 className="text-base font-bold text-slate-900 sm:text-lg">{role.label}</h3>
               <p className="mt-1 text-sm text-slate-500">{role.description}</p>
             </button>
           );
         })}
       </div>
 
-      <form className="space-y-6" onSubmit={handleSubmit}>
+      <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
         <div>
           <label
             htmlFor="signup-business-name"
@@ -103,7 +103,7 @@ export function SignupStep2ProfileDetails({
             id="signup-business-name"
             type="text"
             placeholder="e.g. Green Valley Farm"
-            className="w-full rounded-xl border border-slate-200 px-5 py-3 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf"
+            className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:px-5 sm:py-3"
           />
         </div>
 
@@ -118,7 +118,7 @@ export function SignupStep2ProfileDetails({
             <select
               id="signup-region"
               defaultValue=""
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:py-3"
             >
               <option value="" disabled>
                 Select Region
@@ -139,7 +139,7 @@ export function SignupStep2ProfileDetails({
             <select
               id="signup-province"
               defaultValue=""
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:py-3"
             >
               <option value="" disabled>
                 Select Province
@@ -157,7 +157,7 @@ export function SignupStep2ProfileDetails({
             <select
               id="signup-city"
               defaultValue=""
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:py-3"
             >
               <option value="" disabled>
                 Select City
@@ -166,10 +166,10 @@ export function SignupStep2ProfileDetails({
           </div>
         </div>
 
-        <div className="space-y-4 pt-6">
+        <div className="space-y-4 pt-4 sm:pt-6">
           <button
             type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-agri-accent py-4 font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.01] hover:bg-agri-accent/90 active:scale-[0.99]"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-agri-accent py-3.5 text-sm font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.01] hover:bg-agri-accent/90 active:scale-[0.99] sm:py-4 sm:text-base"
           >
             {step.ctaLabel}
             <span className="material-symbols-outlined text-xl">arrow_forward</span>
