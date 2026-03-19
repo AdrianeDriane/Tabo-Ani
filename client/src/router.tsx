@@ -8,6 +8,7 @@ import { Login } from "./pages/auth/Login";
 import { SignUp } from "./pages/auth/SignUp";
 import Assistant from "./pages/assistant/Assistant";
 import BuyersDashboard from "./pages/buyers/Dashboard";
+import BuyersMarketplace from "./pages/buyers/Marketplace";
 import BuyersWallet from "./pages/buyers/Wallet";
 import DistributorDashboard from "./pages/distributor/Dashboard";
 import QaReporting from "./pages/distributor/QaReporting";
@@ -52,6 +53,10 @@ export const router = createBrowserRouter([
       {
         path: "buyers/dashboard",
         Component: BuyersDashboard,
+      },
+      {
+        path: "buyers/marketplace",
+        Component: BuyersMarketplace,
       },
       {
         path: "buyers/wallet",
