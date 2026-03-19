@@ -12,6 +12,7 @@ import BuyersWallet from "./pages/buyers/Wallet";
 import DistributorDashboard from "./pages/distributor/Dashboard";
 import QaReporting from "./pages/distributor/QaReporting";
 import DistributorWallet from "./pages/distributor/Wallet";
+import FarmerDashboard from "./pages/farmer/Dashboard";
 import FarmerAnalytics from "./pages/farmer/Analytics";
 import FarmerWallet from "./pages/farmer/Wallet";
 import { MessagesPage } from "./pages/MessagesPage";
@@ -55,6 +56,10 @@ export const router = createBrowserRouter([
       {
         path: "buyers/wallet",
         Component: BuyersWallet,
+      },
+      {
+        path: "farmer/dashboard",
+        Component: FarmerDashboard,
       },
       {
         path: "farmer/analytics",
