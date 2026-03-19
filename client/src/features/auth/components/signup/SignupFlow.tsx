@@ -38,15 +38,29 @@ export function SignupFlow() {
     });
   }
 
+  function handleBack() {
+    setCurrentStep((previousStep) => {
+      if (previousStep <= 1) {
+        return previousStep;
+      }
+
+      return (previousStep - 1) as SignupStepId;
+    });
+  }
+
   return (
     <SignupShell
       currentStep={currentStep}
       totalSteps={TOTAL_SIGNUP_STEPS}
       stepTitle={currentStepDefinition.title}
+      stepHelperText={currentStepDefinition.helperText}
+      contentContainerClassName={currentStepDefinition.contentContainerClassName}
+      brandPanelContent={currentStepDefinition.brandPanel}
     >
       <CurrentStepComponent
         step={currentStepDefinition}
         onContinue={handleContinue}
+        onBack={handleBack}
       />
     </SignupShell>
   );
