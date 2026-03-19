@@ -2,10 +2,12 @@ import type { PreferredSupplier } from "../types/buyerDashboard.types";
 
 type PreferredSuppliersProps = {
   suppliers: PreferredSupplier[];
+  onView?: (supplierName: string) => void;
 };
 
 export default function PreferredSuppliers({
   suppliers,
+  onView,
 }: PreferredSuppliersProps) {
   return (
     <section data-purpose="preferred-suppliers">
@@ -35,7 +37,11 @@ export default function PreferredSuppliers({
                   </p>
                 </div>
               </div>
-              <button className="text-xs font-bold text-agri-accent hover:underline">
+              <button
+                className="text-xs font-bold text-agri-accent hover:underline"
+                type="button"
+                onClick={() => onView?.(supplier.name)}
+              >
                 View
               </button>
             </li>
