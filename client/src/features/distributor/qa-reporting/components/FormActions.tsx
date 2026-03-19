@@ -12,7 +12,7 @@ export default function FormActions({ onEscalate }: FormActionsProps) {
         SUBMIT VERIFIED REPORT
       </button>
       <button
-        className="w-full sm:w-auto px-8 py-4 bg-white text-red-600 border border-red-200 font-bold rounded-xl hover:bg-red-50 transition-colors"
+        className="w-full sm:w-auto px-8 py-4 bg-white text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors"
         type="button"
         onClick={onEscalate}
       >

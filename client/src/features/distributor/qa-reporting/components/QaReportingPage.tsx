@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import NavBar from "../../../components/common/distributor/NavBar";
+import NavBar from "../../../../components/common/distributor/NavBar";
 import {
   deliveries,
   gradeOptions,
@@ -62,7 +62,7 @@ export default function QaReportingPage() {
             <PhotoEvidence photoCards={photoCards} />
             <InspectorNotes notes={notes} onChange={setNotes} />
             {submitted && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800">
+              <div className="rounded-xl bg-emerald-50 p-5 text-sm text-emerald-800">
                 QA report submitted for #{selectedDelivery.id}. Freshness score
                 was {freshness}/10 with grade {grade}. Stakeholders have been
                 notified.

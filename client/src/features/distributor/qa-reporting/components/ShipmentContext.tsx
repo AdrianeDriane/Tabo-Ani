@@ -10,7 +10,7 @@ export default function ShipmentContext({
       <h1 className="font-display text-3xl font-bold text-agri-green">
         QA Inspection Report
       </h1>
-      <div className="mt-4 flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl border border-agri-border">
+      <div className="mt-4 flex flex-wrap gap-4 items-center bg-white p-4 rounded-xl">
         <div className="flex flex-col">
           <span className="text-[10px] uppercase font-bold text-gray-400">
             Order ID

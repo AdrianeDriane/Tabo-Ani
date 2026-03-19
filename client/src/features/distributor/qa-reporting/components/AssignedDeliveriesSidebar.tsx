@@ -13,7 +13,7 @@ export default function AssignedDeliveriesSidebar({
       data-purpose="collapsible-sidebar"
       id="delivery-sidebar"
     >
-      <div className="sticky top-28 bg-white border border-agri-border rounded-xl p-5 shadow-sm">
+      <div className="sticky top-28 bg-white rounded-xl p-5 shadow-sm">
         <h3 className="font-display text-sm font-bold text-agri-green uppercase tracking-wider mb-4">
           Assigned Deliveries
         </h3>
@@ -23,8 +23,8 @@ export default function AssignedDeliveriesSidebar({
               key={item.id}
               className={
                 item.isActive
-                  ? "p-3 bg-agri-light border-l-4 border-agri-green rounded-r-lg"
-                  : "p-3 hover:bg-gray-50 border border-transparent rounded-lg cursor-pointer transition-colors"
+                  ? "p-3 bg-agri-light rounded-r-lg"
+                  : "p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
               }
             >
               <p

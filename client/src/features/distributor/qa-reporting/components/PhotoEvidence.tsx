@@ -6,7 +6,7 @@ type PhotoEvidenceProps = {
 
 export default function PhotoEvidence({ photoCards }: PhotoEvidenceProps) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-agri-border shadow-sm">
+    <div className="bg-white p-6 rounded-xl shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h2 className="font-display text-lg font-bold text-gray-900">
           3. Photographic Evidence
@@ -19,14 +19,14 @@ export default function PhotoEvidence({ photoCards }: PhotoEvidenceProps) {
         {photoCards.map((card) => (
           <div
             key={card.title}
-            className="aspect-square border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center p-4 text-center hover:border-agri-leaf hover:bg-green-50/30 transition-all group cursor-pointer"
+            className="aspect-square rounded-xl flex flex-col items-center justify-center p-4 text-center hover:bg-green-50/30 transition-all group cursor-pointer"
           >
             <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-agri-leaf/20">
               {card.shape === "square" && (
-                <div className="w-6 h-6 border-2 border-gray-400 rounded group-hover:border-agri-green" />
+                <div className="w-6 h-6 bg-gray-300 rounded" />
               )}
               {card.shape === "circle" && (
-                <div className="w-6 h-6 border-2 border-gray-400 rounded-full group-hover:border-agri-green" />
+                <div className="w-6 h-6 bg-gray-300 rounded-full" />
               )}
               {card.shape === "line" && (
                 <div className="h-1 w-6 bg-gray-400 group-hover:bg-agri-green" />

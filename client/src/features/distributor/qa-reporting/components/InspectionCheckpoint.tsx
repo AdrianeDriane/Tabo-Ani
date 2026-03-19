@@ -10,15 +10,15 @@ export default function InspectionCheckpoint({
   onChange,
 }: InspectionCheckpointProps) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-agri-border shadow-sm">
+    <div className="bg-white p-6 rounded-xl shadow-sm">
       <h2 className="font-display text-lg font-bold text-gray-900 mb-4">
         1. Inspection Checkpoint
       </h2>
       <div className="grid grid-cols-2 gap-4">
-        <label className="relative flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-agri-green has-[:checked]:bg-green-50">
+        <label className="relative flex items-center p-4 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:bg-green-50">
           <input
             checked={checkpoint === "pickup"}
-            className="w-4 h-4 text-agri-green border-gray-300 focus:ring-agri-green"
+            className="w-4 h-4 text-agri-green focus:ring-agri-green"
             name="checkpoint"
             type="radio"
             value="pickup"
@@ -31,10 +31,10 @@ export default function InspectionCheckpoint({
             </p>
           </div>
         </label>
-        <label className="relative flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-agri-green has-[:checked]:bg-green-50">
+        <label className="relative flex items-center p-4 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:bg-green-50">
           <input
             checked={checkpoint === "delivery"}
-            className="w-4 h-4 text-agri-green border-gray-300 focus:ring-agri-green"
+            className="w-4 h-4 text-agri-green focus:ring-agri-green"
             name="checkpoint"
             type="radio"
             value="delivery"
