@@ -33,7 +33,7 @@ export default function ChatInput({ placeholder }: ChatInputProps) {
     <div className="p-4 md:p-6 border-t border-slate-100 bg-white" data-purpose="chat-input-container">
       <div className="relative max-w-4xl mx-auto">
         <input
-          className="w-full bg-slate-50 border-none rounded-2xl py-4 pl-6 pr-24 focus:ring-2 focus:ring-agri-green-500 transition-all text-slate-700"
+          className="w-full bg-slate-50 border-none rounded-2xl py-4 pl-6 pr-24 focus:ring-2 focus:ring-agri-green transition-all text-slate-700"
           placeholder={placeholder}
           type="text"
         />
@@ -41,7 +41,7 @@ export default function ChatInput({ placeholder }: ChatInputProps) {
           <button className="p-2 text-slate-400 hover:text-agri-green-600 transition-colors">
             <AttachmentIcon />
           </button>
-          <button className="bg-agri-green-600 hover:bg-agri-green-700 text-white p-2 rounded-xl transition-all shadow-lg shadow-agri-green-200">
+          <button className="bg-agri-green hover:bg-agri-green/90 text-white p-2 rounded-xl transition-all shadow-lg shadow-agri-green/20">
             <SendIcon />
           </button>
         </div>

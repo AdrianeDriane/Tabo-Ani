@@ -53,17 +53,17 @@ export default function ChatMessageBubble({
   if (showQuickActions) {
     return (
       <div className="flex gap-4 max-w-[85%]">
-        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-agri-green-600 flex items-center justify-center text-white shadow-md">
+        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-agri-green flex items-center justify-center text-white shadow-md">
           <AssistantActionIcon />
         </div>
         <div className="space-y-4 w-full">
-          <div className="bg-agri-green-50 text-agri-green-900 rounded-2xl rounded-tl-none p-4 shadow-sm">
+          <div className="bg-agri-light text-agri-green rounded-2xl rounded-tl-none p-4 shadow-sm">
             <p className="text-sm md:text-base mb-4">{message.content}</p>
             <div className="flex flex-wrap gap-2" data-purpose="quick-actions">
               {quickActions?.map((action) => (
                 <button
                   key={action}
-                  className="bg-white border border-agri-green-200 hover:border-agri-green-500 hover:bg-agri-green-100 text-agri-green-700 px-4 py-2 rounded-full text-xs md:text-sm font-semibold transition-all shadow-sm"
+                  className="bg-white border border-agri-leaf/30 hover:border-agri-leaf hover:bg-agri-light text-agri-green px-4 py-2 rounded-full text-xs md:text-sm font-semibold transition-all shadow-sm"
                 >
                   {action}
                 </button>
@@ -77,10 +77,10 @@ export default function ChatMessageBubble({
 
   return (
     <div className="flex gap-4 max-w-[85%]">
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-agri-green-600 flex items-center justify-center text-white shadow-md">
+      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-agri-green flex items-center justify-center text-white shadow-md">
         <AssistantIcon />
       </div>
-      <div className="bg-agri-green-50 text-agri-green-900 rounded-2xl rounded-tl-none p-4 shadow-sm">
+      <div className="bg-agri-light text-agri-green rounded-2xl rounded-tl-none p-4 shadow-sm">
         <p className="text-sm md:text-base leading-relaxed">{message.content}</p>
       </div>
     </div>
