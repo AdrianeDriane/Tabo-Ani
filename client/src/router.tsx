@@ -4,6 +4,7 @@ import { CheckoutPage } from "./pages/CheckoutPage";
 import { ErrorPage } from "./pages/ErrorPage";
 import { FarmerProfilePage } from "./pages/FarmerProfilePage";
 import { Landing } from "./pages/Landing";
+import { Login } from "./pages/auth/Login";
 import { SignUp } from "./pages/auth/SignUp";
 import Assistant from "./pages/assistant/Assistant";
 import BuyersDashboard from "./pages/buyers/Dashboard";
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: "signup",
         Component: SignUp,
+      },
+      {
+        path: "login",
+        Component: Login,
       },
       {
         path: "admin",

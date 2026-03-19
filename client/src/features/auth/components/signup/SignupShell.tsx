@@ -54,7 +54,7 @@ export function SignupShell({
                       <span className="text-sm text-slate-400">
                         Already have an account?{" "}
                         <Link
-                          to="/"
+                          to="/login"
                           className="font-bold text-agri-accent hover:underline"
                         >
                           Log in
@@ -83,7 +83,7 @@ export function SignupShell({
                   <span className="text-sm text-slate-400">
                     Already have an account?{" "}
                     <Link
-                      to="/"
+                      to="/login"
                       className="font-bold text-agri-accent hover:underline"
                     >
                       Log in
