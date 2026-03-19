@@ -12,6 +12,7 @@ import InspectionCheckpoint from "./InspectionCheckpoint";
 import InspectorNotes from "./InspectorNotes";
 import PhotoEvidence from "./PhotoEvidence";
 import QaFooter from "./QaFooter";
+import QaModal from "./QaModal";
 import QualityAssessment from "./QualityAssessment";
 import ShipmentContext from "./ShipmentContext";
 
@@ -22,6 +23,12 @@ export default function QaReportingPage() {
   const [grade, setGrade] = useState<Grade>("A");
   const [notes, setNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [modal, setModal] = useState<{
+    title: string;
+    description: string;
+    confirmLabel?: string;
+    onConfirm?: () => void;
+  } | null>(null);
 
   const selectedDelivery = useMemo(
     () => deliveries.find((item) => item.isActive) ?? deliveries[0],
@@ -30,7 +37,14 @@ export default function QaReportingPage() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
+  };
+
+  const openModal = (
+    title: string,
+    description: string,
+    options?: { confirmLabel?: string; onConfirm?: () => void },
+  ) => {
+    setModal({ title, description, ...options });
   };
 
   return (
@@ -68,12 +82,40 @@ export default function QaReportingPage() {
                 notified.
               </div>
             )}
-            <FormActions />
+            <FormActions
+              onSubmitClick={() =>
+                openModal(
+                  "Submit QA Report",
+                  "Please confirm you want to submit this QA report.",
+                  {
+                    confirmLabel: "Confirm Submit",
+                    onConfirm: () => {
+                      setSubmitted(true);
+                      setModal(null);
+                    },
+                  },
+                )
+              }
+              onEscalate={() =>
+                openModal(
+                  "Escalation Sent",
+                  "A discrepancy alert has been sent to the hub manager.",
+                )
+              }
+            />
           </form>
         </section>
       </main>
 
       <QaFooter />
+      <QaModal
+        isOpen={Boolean(modal)}
+        title={modal?.title ?? ""}
+        description={modal?.description ?? ""}
+        onConfirm={modal?.onConfirm}
+        confirmLabel={modal?.confirmLabel}
+        onClose={() => setModal(null)}
+      />
     </div>
   );
 }
