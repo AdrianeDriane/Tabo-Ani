@@ -4,6 +4,7 @@ import { CheckoutPage } from "./pages/CheckoutPage";
 import { ErrorPage } from "./pages/ErrorPage";
 import { FarmerProfilePage } from "./pages/FarmerProfilePage";
 import { Landing } from "./pages/Landing";
+import { SignUp } from "./pages/auth/SignUp";
 import Assistant from "./pages/assistant/Assistant";
 import BuyersDashboard from "./pages/buyers/Dashboard";
 import BuyersWallet from "./pages/buyers/Wallet";
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: Landing,
+      },
+      {
+        path: "signup",
+        Component: SignUp,
       },
       {
         path: "admin",
@@ -64,7 +69,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "distributor/wallet",
-        Component: DistributorWallet
+        Component: DistributorWallet,
       },
       {
         path: "farmer/:id",
