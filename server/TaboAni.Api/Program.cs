@@ -1,6 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using TaboAni.Api.Data;
 using TaboAni.Api.Infrastructure;
+using TaboAni.Api.Verification;
+
+if (args.Contains("--verify-schema", StringComparer.Ordinal))
+{
+    Environment.ExitCode = SchemaVerificationRunner.Run();
+    return;
+}
 
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 

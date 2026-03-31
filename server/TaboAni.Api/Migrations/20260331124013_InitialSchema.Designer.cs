@@ -4,6 +4,7 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TaboAni.Api.Data;
@@ -13,9 +14,11 @@ using TaboAni.Api.Data;
 namespace TaboAni.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260331124013_InitialSchema")]
+    partial class InitialSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,9 +81,6 @@ namespace TaboAni.Api.Migrations
 
                     b.HasIndex("ActorUserId")
                         .HasDatabaseName("ix_audit_logs_actor_user_id");
-
-                    b.HasIndex("EntityType", "EntityId", "CreatedAt")
-                        .HasDatabaseName("ix_audit_logs_entity_lookup");
 
                     b.ToTable("audit_logs", (string)null);
                 });
@@ -387,9 +387,6 @@ namespace TaboAni.Api.Migrations
                     b.HasIndex("VehicleTypeId")
                         .HasDatabaseName("ix_deliveries_vehicle_type_id");
 
-                    b.HasIndex("DeliveryStatus", "PlannedPickupDate")
-                        .HasDatabaseName("ix_deliveries_status_planned_pickup");
-
                     b.ToTable("deliveries", (string)null);
                 });
 
@@ -515,11 +512,11 @@ namespace TaboAni.Api.Migrations
                     b.HasKey("DeliveryStatusHistoryId")
                         .HasName("pk_delivery_status_history");
 
+                    b.HasIndex("DeliveryId")
+                        .HasDatabaseName("ix_delivery_status_history_delivery_id");
+
                     b.HasIndex("TriggeredByUserId")
                         .HasDatabaseName("ix_delivery_status_history_triggered_by_user_id");
-
-                    b.HasIndex("DeliveryId", "CreatedAt")
-                        .HasDatabaseName("ix_delivery_status_history_delivery_created_at");
 
                     b.ToTable("delivery_status_history", (string)null);
                 });
@@ -876,9 +873,6 @@ namespace TaboAni.Api.Migrations
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_kyc_applications_user_id");
 
-                    b.HasIndex("ApplicationStatus", "SubmittedAt")
-                        .HasDatabaseName("ix_kyc_applications_status_submitted_at");
-
                     b.ToTable("kyc_applications", (string)null);
                 });
 
@@ -1086,8 +1080,8 @@ namespace TaboAni.Api.Migrations
                     b.HasIndex("ChangedByUserId")
                         .HasDatabaseName("ix_listing_price_history_changed_by_user_id");
 
-                    b.HasIndex("ProduceListingId", "EffectiveAt")
-                        .HasDatabaseName("ix_listing_price_history_listing_effective_at");
+                    b.HasIndex("ProduceListingId")
+                        .HasDatabaseName("ix_listing_price_history_produce_listing_id");
 
                     b.ToTable("listing_price_history", (string)null);
                 });
@@ -1141,11 +1135,11 @@ namespace TaboAni.Api.Migrations
                     b.HasKey("MessageId")
                         .HasName("pk_messages");
 
+                    b.HasIndex("ConversationId")
+                        .HasDatabaseName("ix_messages_conversation_id");
+
                     b.HasIndex("SenderUserId")
                         .HasDatabaseName("ix_messages_sender_user_id");
-
-                    b.HasIndex("ConversationId", "SentAt")
-                        .HasDatabaseName("ix_messages_conversation_sent_at");
 
                     b.ToTable("messages", (string)null);
                 });
@@ -1267,12 +1261,12 @@ namespace TaboAni.Api.Migrations
                     b.HasKey("OrderId")
                         .HasName("pk_orders");
 
+                    b.HasIndex("BuyerUserId")
+                        .HasDatabaseName("ix_orders_buyer_user_id");
+
                     b.HasIndex("OrderNumber")
                         .IsUnique()
                         .HasDatabaseName("ix_orders_order_number");
-
-                    b.HasIndex("BuyerUserId", "OrderStatus", "CreatedAt")
-                        .HasDatabaseName("ix_orders_buyer_status_created_at");
 
                     b.ToTable("orders", (string)null);
                 });
@@ -1462,11 +1456,11 @@ namespace TaboAni.Api.Migrations
                     b.HasKey("OrderStatusHistoryId")
                         .HasName("pk_order_status_history");
 
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("ix_order_status_history_order_id");
+
                     b.HasIndex("TriggeredByUserId")
                         .HasDatabaseName("ix_order_status_history_triggered_by_user_id");
-
-                    b.HasIndex("OrderId", "CreatedAt")
-                        .HasDatabaseName("ix_order_status_history_order_created_at");
 
                     b.ToTable("order_status_history", (string)null);
                 });
@@ -1721,8 +1715,8 @@ namespace TaboAni.Api.Migrations
                     b.HasIndex("FarmerProfileId")
                         .HasDatabaseName("ix_produce_listings_farmer_profile_id");
 
-                    b.HasIndex("ProduceCategoryId", "ListingStatus", "CreatedAt")
-                        .HasDatabaseName("ix_produce_listings_category_status_created_at");
+                    b.HasIndex("ProduceCategoryId")
+                        .HasDatabaseName("ix_produce_listings_produce_category_id");
 
                     b.ToTable("produce_listings", (string)null);
                 });
@@ -1981,11 +1975,11 @@ namespace TaboAni.Api.Migrations
                     b.HasIndex("OrderId")
                         .HasDatabaseName("ix_reviews_order_id");
 
+                    b.HasIndex("ProduceListingId")
+                        .HasDatabaseName("ix_reviews_produce_listing_id");
+
                     b.HasIndex("ReviewerUserId")
                         .HasDatabaseName("ix_reviews_reviewer_user_id");
-
-                    b.HasIndex("ProduceListingId", "ReviewStatus", "CreatedAt")
-                        .HasDatabaseName("ix_reviews_listing_status_created_at");
 
                     b.ToTable("reviews", null, t =>
                         {
@@ -2338,8 +2332,8 @@ namespace TaboAni.Api.Migrations
                     b.HasIndex("PaymentId")
                         .HasDatabaseName("ix_wallet_transactions_payment_id");
 
-                    b.HasIndex("WalletId", "CreatedAt")
-                        .HasDatabaseName("ix_wallet_transactions_wallet_created_at");
+                    b.HasIndex("WalletId")
+                        .HasDatabaseName("ix_wallet_transactions_wallet_id");
 
                     b.ToTable("wallet_transactions", (string)null);
                 });
