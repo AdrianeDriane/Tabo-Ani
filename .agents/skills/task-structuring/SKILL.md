@@ -1,6 +1,6 @@
 ---
 name: task-structuring
-description: Use ONLY when the user explicitly wants help turning a raw development task into a structured prompt using Goal, Context, Constraints, Relevant files, and Done when. This skill must never modify code or files.
+description: Use ONLY when the user explicitly wants help turning a raw development task into a structured prompt using Goal, Context, Constraints, and Done when. This skill must never modify code or files.
 ---
 
 # Purpose
@@ -34,13 +34,10 @@ Context:
 
 Constraints:
 
-Relevant files:
-
 Done when:
 
 - Preserve the user's original intent and logic.
 - Improve clarity, precision, and completeness of wording.
-- Leave `Relevant files:` empty so the user can manually fill it in.
 - Return only the structured prompt unless the user asks for explanation.
 
 ## If the user's task is incomplete or missing logic
@@ -72,13 +69,10 @@ Context:
 
 Constraints:
 
-Relevant files:
-
 Done when:
 
 # Output rules
 
-- `Relevant files:` must remain blank unless the user explicitly provides them and asks to include them.
 - Do not include commentary before or after the structured prompt unless the user explicitly asks for explanation.
 - Do not perform coding, planning, or file modification.
 - Do not suggest implementation steps unless the user explicitly asks for them.
