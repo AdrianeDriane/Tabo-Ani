@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TaboAni.Api.Models;
+using TaboAni.Api.Domain.Entities;
 
 namespace TaboAni.Api.Data.Configurations;
 
@@ -37,3 +37,4 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasFilter("\"mobile_number\" IS NOT NULL");
     }
 }
+

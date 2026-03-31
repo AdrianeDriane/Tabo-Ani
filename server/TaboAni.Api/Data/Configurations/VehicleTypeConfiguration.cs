@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TaboAni.Api.Models;
+using TaboAni.Api.Domain.Entities;
 
 namespace TaboAni.Api.Data.Configurations;
 
@@ -18,3 +18,4 @@ internal sealed class VehicleTypeConfiguration : IEntityTypeConfiguration<Vehicl
         builder.HasIndex(x => x.VehicleTypeName).IsUnique();
     }
 }
+

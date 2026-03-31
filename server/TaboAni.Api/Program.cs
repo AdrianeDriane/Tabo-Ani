@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using TaboAni.Api.Application.Configuration;
+using TaboAni.Api.Application.Extensions;
 using TaboAni.Api.Data;
-using TaboAni.Api.Infrastructure;
 using TaboAni.Api.Verification;
 
 if (args.Contains("--verify-schema", StringComparer.Ordinal))
@@ -12,6 +13,7 @@ if (args.Contains("--verify-schema", StringComparer.Ordinal))
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "Missing ConnectionStrings:DefaultConnection. Set it in server/TaboAni.Api/.env.");
@@ -20,6 +22,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiDocumentation();
+builder.Services.AddApplicationDependencies();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));

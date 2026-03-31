@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using TaboAni.Api.Models;
+using TaboAni.Api.Domain.Entities;
 
 namespace TaboAni.Api.Data.Configurations;
 
@@ -29,3 +29,4 @@ internal sealed class ProduceInventoryBatchConfiguration : IEntityTypeConfigurat
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
+

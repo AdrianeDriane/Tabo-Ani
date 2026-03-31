@@ -1,8 +1,8 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using TaboAni.Api.Data;
-using TaboAni.Api.Models;
+using TaboAni.Api.Domain.Entities;
 
 namespace TaboAni.Api.Verification;
 
@@ -232,3 +232,4 @@ public static class SchemaVerificationRunner
         }
     }
 }
+

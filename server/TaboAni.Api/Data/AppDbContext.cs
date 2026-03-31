@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using TaboAni.Api.Data.Configurations;
-using TaboAni.Api.Models;
+using TaboAni.Api.Domain.Entities;
 
 namespace TaboAni.Api.Data;
 
@@ -59,3 +59,4 @@ public partial class AppDbContext : DbContext
         modelBuilder.ApplySnakeCaseNaming();
     }
 }
+
