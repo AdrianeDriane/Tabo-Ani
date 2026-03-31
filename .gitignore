@@ -36,3 +36,5 @@ server/**/*.suo
 server/TaboAni.Api/.env
 server/**/appsettings.Local.json
 server/**/appsettings.*.local.json
+
+task-template.md
