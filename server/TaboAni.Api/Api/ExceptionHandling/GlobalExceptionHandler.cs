@@ -16,8 +16,8 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         var (statusCode, message, errors) = exception switch
         {
             DomainException domainException => (
-                StatusCodes.Status400BadRequest,
-                "Domain validation failed.",
+                (int)domainException.StatusCode,
+                ResolveDomainMessage(domainException),
                 new[] { $"{domainException.Code}: {domainException.Message}" }),
             ArgumentException argumentException => (
                 StatusCodes.Status400BadRequest,
@@ -48,5 +48,15 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
         }, cancellationToken);
 
         return true;
+    }
+
+    private static string ResolveDomainMessage(DomainException domainException)
+    {
+        return (int)domainException.StatusCode switch
+        {
+            StatusCodes.Status403Forbidden => "You do not have access to the requested listing.",
+            StatusCodes.Status404NotFound => "The requested resource was not found.",
+            _ => "Domain validation failed."
+        };
     }
 }
