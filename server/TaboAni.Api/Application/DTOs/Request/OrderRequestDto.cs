@@ -24,3 +24,21 @@ public class OrderRequestDto
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }
+
+public class InitialOrderRequestDto
+{
+    public Guid BuyerUserId { get; set; }
+    public string OrderNumber { get; set; } = string.Empty;
+    public decimal SubtotalAmount { get; set; }
+    public decimal DeliveryFeeAmount { get; set; }
+    public decimal PlatformFeeAmount { get; set; }
+    public string DeliveryLocationText { get; set; } = string.Empty;
+    public decimal? DeliveryLatitude { get; set; }
+    public decimal? DeliveryLongitude { get; set; }
+    public DateOnly? RequestedDeliveryDate { get; set; }
+}
+
+public sealed class OrderPaymentRequestDto
+{
+    public decimal Amount { get; set; }
+}

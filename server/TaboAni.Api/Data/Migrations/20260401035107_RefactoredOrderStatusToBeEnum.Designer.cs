@@ -4,6 +4,7 @@ using System.Net;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TaboAni.Api.Data;
@@ -13,9 +14,11 @@ using TaboAni.Api.Data;
 namespace TaboAni.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260401035107_RefactoredOrderStatusToBeEnum")]
+    partial class RefactoredOrderStatusToBeEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1223,10 +1226,6 @@ namespace TaboAni.Api.Migrations
                         .HasColumnType("numeric(12,2)")
                         .HasDefaultValue(0.00m)
                         .HasColumnName("final_payment_paid_amount");
-
-                    b.Property<DateTimeOffset?>("FinalPaymentPaidAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("final_payment_paid_at");
 
                     b.Property<string>("OrderNumber")
                         .IsRequired()

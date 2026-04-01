@@ -11,5 +11,6 @@ public sealed class OrderMapsterConfiguration : IRegister
     {
         config.NewConfig<Order, OrderRequestDto>().TwoWays();
         config.NewConfig<Order, OrderResponseDto>();
+        config.NewConfig<Order, InitialOrderRequestDto>().TwoWays();
     }
 }
