@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import NavBar from "../../../../components/common/distributor/NavBar";
+import Navbar from "../../../../components/common/distributor/NavBar";
 import {
   deliveries,
   gradeOptions,
@@ -36,7 +36,7 @@ export default function QaReportingPage() {
   return (
     <div className="min-h-screen bg-agri-light text-slate-800 font-sans antialiased">
       <header className="fixed top-0 left-0 right-0 z-50 px-4">
-        <NavBar />
+        <Navbar />
       </header>
 
       <main className="pt-24 pb-12 px-6 max-w-7xl mx-auto flex gap-8">
@@ -62,7 +62,7 @@ export default function QaReportingPage() {
             <PhotoEvidence photoCards={photoCards} />
             <InspectorNotes notes={notes} onChange={setNotes} />
             {submitted && (
-              <div className="rounded-xl bg-emerald-50 p-5 text-sm text-emerald-800">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800">
                 QA report submitted for #{selectedDelivery.id}. Freshness score
                 was {freshness}/10 with grade {grade}. Stakeholders have been
                 notified.
