@@ -98,6 +98,109 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         });
     }
 
+    [HttpPost("{listingId:guid}/inventory-batches")]
+    [ProducesResponseType(typeof(ApiResponseDto<InventoryBatchResponseDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CreateInventoryBatch(
+        Guid farmerProfileId,
+        Guid listingId,
+        [FromBody] CreateInventoryBatchRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var batch = await _marketplaceService.CreateInventoryBatchAsync(
+            farmerProfileId,
+            listingId,
+            request,
+            cancellationToken);
+
+        return CreatedAtAction(
+            nameof(GetListingInventory),
+            new { farmerProfileId, listingId },
+            new ApiResponseDto<InventoryBatchResponseDto>
+            {
+                Success = true,
+                Message = "Inventory batch created successfully.",
+                Data = batch
+            });
+    }
+
+    [HttpPut("{listingId:guid}/inventory-batches/{batchId:guid}")]
+    [ProducesResponseType(typeof(ApiResponseDto<InventoryBatchResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateInventoryBatch(
+        Guid farmerProfileId,
+        Guid listingId,
+        Guid batchId,
+        [FromBody] UpdateInventoryBatchRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var batch = await _marketplaceService.UpdateInventoryBatchAsync(
+            farmerProfileId,
+            listingId,
+            batchId,
+            request,
+            cancellationToken);
+
+        return Ok(new ApiResponseDto<InventoryBatchResponseDto>
+        {
+            Success = true,
+            Message = "Inventory batch updated successfully.",
+            Data = batch
+        });
+    }
+
+    [HttpGet("{listingId:guid}/inventory")]
+    [ProducesResponseType(typeof(ApiResponseDto<FarmerListingInventoryResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetListingInventory(
+        Guid farmerProfileId,
+        Guid listingId,
+        CancellationToken cancellationToken)
+    {
+        var inventory = await _marketplaceService.GetListingInventoryAsync(farmerProfileId, listingId, cancellationToken);
+
+        return Ok(new ApiResponseDto<FarmerListingInventoryResponseDto>
+        {
+            Success = true,
+            Message = "Listing inventory retrieved successfully.",
+            Data = inventory
+        });
+    }
+
+    [HttpPatch("{listingId:guid}/price")]
+    [ProducesResponseType(typeof(ApiResponseDto<FarmerProduceListingDetailResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateListingPrice(
+        Guid farmerProfileId,
+        Guid listingId,
+        [FromBody] UpdateListingPriceRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var listing = await _marketplaceService.UpdateListingPriceAsync(
+            farmerProfileId,
+            listingId,
+            request,
+            cancellationToken);
+
+        return Ok(new ApiResponseDto<FarmerProduceListingDetailResponseDto>
+        {
+            Success = true,
+            Message = "Listing price updated successfully.",
+            Data = listing
+        });
+    }
+
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponseDto<PagedFarmerProduceListingsResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
