@@ -54,6 +54,15 @@ public sealed class OrdersController(IOrderService orderService) : ControllerBas
                 Errors = [exception.Message]
             });
         }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new ErrorResponseDto
+            {
+                Success = false,
+                Message = "Order creation failed.",
+                Errors = [exception.Message]
+            });
+        }
         catch
         {
             return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto

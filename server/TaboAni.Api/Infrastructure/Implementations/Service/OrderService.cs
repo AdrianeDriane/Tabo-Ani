@@ -5,6 +5,7 @@ using TaboAni.Api.Application.Extensions.MappingExtensions;
 using TaboAni.Api.Application.Interfaces.Repository;
 using TaboAni.Api.Application.Interfaces.Service;
 using TaboAni.Api.Domain.Entities;
+using TaboAni.Api.Domain.Enums;
 
 namespace TaboAni.Api.Infrastructure.Implementations.Service;
 
@@ -75,6 +76,7 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
     private static void InitializeOrder(Order order, DateTimeOffset now)
     {
         order.OrderId = Guid.NewGuid();
+        order.OrderStatus = OrderStatus.PendingDownpayment;
         order.CreatedAt = now;
         order.UpdatedAt = now;
     }
