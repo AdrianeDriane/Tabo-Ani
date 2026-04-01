@@ -1,11 +1,13 @@
-﻿namespace TaboAni.Api.Domain.Entities;
+﻿using TaboAni.Api.Domain.Enums;
+
+namespace TaboAni.Api.Domain.Entities;
 
 public class Order
 {
     public Guid OrderId { get; set; }
     public Guid BuyerUserId { get; set; }
     public string OrderNumber { get; set; } = string.Empty;
-    public string OrderStatus { get; set; } = string.Empty;
+    public OrderStatus OrderStatus { get; set; }
     public decimal DownpaymentDueAmount { get; set; }
     public decimal DownpaymentPaidAmount { get; set; }
     public decimal FinalPaymentDueAmount { get; set; }
@@ -19,9 +21,11 @@ public class Order
     public decimal? DeliveryLongitude { get; set; }
     public DateOnly? RequestedDeliveryDate { get; set; }
     public DateTimeOffset? DownpaymentPaidAt { get; set; }
+    public DateTimeOffset? FinalPaymentPaidAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
     public DateTimeOffset? CancelledAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 }
 

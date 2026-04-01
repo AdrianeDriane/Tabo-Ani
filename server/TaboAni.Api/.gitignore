@@ -9,3 +9,4 @@ obj/
 *.userosscache
 *.sln.docstates
 docs/
+.dotnet/

@@ -21,4 +21,9 @@ public static class OrderMappingExtensions
     {
         return orderRequestDto.Adapt<Order>();
     }
+    
+    public static Order ToEntity(this InitialOrderRequestDto orderRequestDto)
+    {
+        return orderRequestDto.Adapt<Order>();
+    }
 }

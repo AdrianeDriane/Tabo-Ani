@@ -1,3 +1,5 @@
+using TaboAni.Api.Application.DTOs.Response;
+
 namespace TaboAni.Api.Application.DTOs.Response;
 
 public class OrderResponseDto
@@ -23,4 +25,6 @@ public class OrderResponseDto
     public DateTimeOffset? CancelledAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public List<OrderItemsResponseDto> OrderItems { get; set; } = new List<OrderItemsResponseDto>();
+
 }

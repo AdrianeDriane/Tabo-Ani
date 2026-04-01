@@ -5,12 +5,11 @@ using TaboAni.Api.Domain.Entities;
 
 namespace TaboAni.Api.Application.Configuration.MapsterConfiguration;
 
-public sealed class OrderMapsterConfiguration : IRegister
+public sealed class OrderItemsMapsterConfiguration : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<Order, OrderRequestDto>().TwoWays();
-        config.NewConfig<Order, OrderResponseDto>();
-        config.NewConfig<Order, InitialOrderRequestDto>().TwoWays();
+        config.NewConfig<OrderItem, OrderItemsRequestDto>().TwoWays();
+        config.NewConfig<OrderItem, OrderItemsResponseDto>().TwoWays();
     }
 }
