@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.Extensions;
 using TaboAni.Api.Data;
+using TaboAni.Api.Data.Seeders;
 using TaboAni.Api.Verification;
 
 if (args.Contains("--verify-schema", StringComparer.Ordinal))
@@ -42,6 +43,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapApiDocumentation();
+}
+
+if (args.Contains("--seed-order-test-data", StringComparer.Ordinal))
+{
+    await OrderTestDataSeeder.SeedAsync(app.Services);
+    return;
 }
 
 app.UseHttpsRedirection();

@@ -16,8 +16,9 @@ internal sealed class OrderItemConfiguration : IEntityTypeConfiguration<OrderIte
         builder.ConfigureRequiredVarchar(x => x.ListingTitleSnapshot, 150);
         builder.ConfigureRequiredVarchar(x => x.ProduceNameSnapshot, 150);
         builder.ConfigureCreatedAt(x => x.CreatedAt);
+        builder.ConfigureUpdatedAt(x => x.UpdatedAt);
         builder.HasOne<Order>()
-            .WithMany()
+            .WithMany(order => order.OrderItems)
             .HasForeignKey(x => x.OrderId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<ProduceListing>()

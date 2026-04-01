@@ -5,7 +5,7 @@ namespace TaboAni.Api.Application.Interfaces.Service;
 
 public interface IOrderService
 {
-    Task<OrderResponseDto> CreateOrderAsync(OrderRequestDto orderRequestDto, CancellationToken cancellationToken = default);
+    Task<OrderResponseDto> CreateOrderAsync(InitialOrderRequestDto orderRequestDto, CancellationToken cancellationToken = default);
     Task<OrderResponseDto> GetOrderByIdAsync(Guid orderId, CancellationToken cancellationToken = default);
     Task<IEnumerable<OrderResponseDto>> GetOrdersByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<OrderResponseDto> PayDownpaymentAsync(Guid orderId, decimal amount, CancellationToken cancellationToken = default);

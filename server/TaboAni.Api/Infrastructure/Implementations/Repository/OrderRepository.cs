@@ -24,6 +24,7 @@ public sealed class OrderRepository(AppDbContext context) : IOrderRepository
     {
         return await _context.Orders
             .AsNoTracking()
+            .Include(order => order.OrderItems)
             .Where(order => order.OrderId == orderId)
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -32,6 +33,7 @@ public sealed class OrderRepository(AppDbContext context) : IOrderRepository
     {
         return await _context.Orders
             .AsNoTracking()
+            .Include(order => order.OrderItems)
             .Where(order => order.BuyerUserId == userId)
             .OrderByDescending(order => order.CreatedAt)
             .ToListAsync(cancellationToken);

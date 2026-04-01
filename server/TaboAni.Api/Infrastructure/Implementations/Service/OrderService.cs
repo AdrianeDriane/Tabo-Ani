@@ -13,24 +13,34 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<OrderResponseDto> CreateOrderAsync(
-        OrderRequestDto orderRequestDto,
+        InitialOrderRequestDto orderRequestDto,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(orderRequestDto);
 
-        var order = orderRequestDto.ToEntity();
+        var orderItems = CreateOrderItems(orderRequestDto.OrderItems);
+        var order = CreateOrder(orderRequestDto);
         var now = DateTimeOffset.UtcNow;
 
-        order.OrderId = Guid.NewGuid();
-        order.CreatedAt = now;
-        order.UpdatedAt = now;
+        InitializeOrder(order, now);
+        AssignOrderId(orderItems, order.OrderId);
 
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
 
         try
         {
-            var createdOrder = await _unitOfWork.Orders.CreateOrderAsync(order, cancellationToken);
+            await _unitOfWork.Orders.CreateOrderAsync(order, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            if (orderItems.Count > 0)
+            {
+                orderItems.ForEach(orderItem => orderItem.OrderId = order.OrderId);
+                await _unitOfWork.OrderItems.CreateBulkOrderItemsAsync(orderItems, cancellationToken);
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var createdOrder = await _unitOfWork.Orders.GetOrderByIdAsync(order.OrderId, cancellationToken)
+                ?? throw new OrderOperationException("Order not found after creation.", OrderOperationFailureType.NotFound);
             await _unitOfWork.CommitAsync(cancellationToken);
 
             return createdOrder.ToResponseDto();
@@ -39,6 +49,41 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
         {
             await _unitOfWork.RollbackAsync(cancellationToken);
             throw;
+        }
+    }
+
+    private static Order CreateOrder(InitialOrderRequestDto orderRequestDto)
+    {
+        var order = orderRequestDto.ToEntity();
+        order.OrderItems = [];
+
+        return order;
+    }
+
+    private static List<OrderItem> CreateOrderItems(IEnumerable<OrderItemsRequestDto>? orderItems)
+    {
+        if (orderItems is null)
+        {
+            return [];
+        }
+
+        return orderItems
+            .Select(orderItem => orderItem.ToEntity())
+            .ToList();
+    }
+
+    private static void InitializeOrder(Order order, DateTimeOffset now)
+    {
+        order.OrderId = Guid.NewGuid();
+        order.CreatedAt = now;
+        order.UpdatedAt = now;
+    }
+
+    private static void AssignOrderId(IEnumerable<OrderItem> orderItems, Guid orderId)
+    {
+        foreach (var orderItem in orderItems)
+        {
+            orderItem.OrderId = orderId;
         }
     }
 

@@ -3,6 +3,7 @@ using TaboAni.Api.Application.DTOs.Request;
 using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Exceptions;
 using TaboAni.Api.Application.Interfaces.Service;
+using TaboAni.Api.Domain.Entities;
 
 namespace TaboAni.Api.Controllers;
 
@@ -17,7 +18,7 @@ public sealed class OrdersController(IOrderService orderService) : ControllerBas
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateOrder(
-        [FromBody] OrderRequestDto orderRequestDto,
+        [FromBody] InitialOrderRequestDto orderRequestDto,
         CancellationToken cancellationToken)
     {
         if (orderRequestDto.BuyerUserId == Guid.Empty)

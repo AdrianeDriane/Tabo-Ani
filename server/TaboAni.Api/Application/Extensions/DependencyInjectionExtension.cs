@@ -15,6 +15,7 @@ public static class DependencyInjectionExtension
         TypeAdapterConfig.GlobalSettings.Scan(typeof(OrderMapsterConfiguration).Assembly);
 
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IOrderItemRepository, OrderItemsRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderService, OrderService>();
 
