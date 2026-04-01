@@ -187,7 +187,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] UpdateListingPriceRequestDto request,
         CancellationToken cancellationToken)
     {
-        var listing = await _marketplaceService.UpdateListingPriceAsync(
+        var result = await _marketplaceService.UpdateListingPriceAsync(
             farmerProfileId,
             listingId,
             request,
@@ -196,8 +196,10 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         return Ok(new ApiResponseDto<FarmerProduceListingDetailResponseDto>
         {
             Success = true,
-            Message = "Listing price updated successfully.",
-            Data = listing
+            Message = result.PriceChanged
+                ? "Listing price updated successfully."
+                : "Listing price unchanged.",
+            Data = result.Listing
         });
     }
 

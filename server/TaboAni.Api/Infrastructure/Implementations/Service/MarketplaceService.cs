@@ -207,7 +207,7 @@ public sealed class MarketplaceService(IUnitOfWork unitOfWork) : IMarketplaceSer
         return ToListingInventoryResponse(inventory!);
     }
 
-    public async Task<FarmerProduceListingDetailResponseDto> UpdateListingPriceAsync(
+    public async Task<ListingPriceUpdateResultDto> UpdateListingPriceAsync(
         Guid farmerProfileId,
         Guid listingId,
         UpdateListingPriceRequestDto request,
@@ -221,7 +221,10 @@ public sealed class MarketplaceService(IUnitOfWork unitOfWork) : IMarketplaceSer
 
         var listing = await GetOwnedListingForMutationAsync(validatedFarmerProfileId, validatedListingId, cancellationToken);
 
-        if (listing.PricePerKg != validatedRequest.PricePerKg)
+        var priceChanged = listing.PricePerKg != validatedRequest.PricePerKg;
+
+        // Avoid writing duplicate history rows when the submitted price is already current.
+        if (priceChanged)
         {
             var updatedAt = DateTimeOffset.UtcNow;
             var priceHistory = BuildPriceHistory(
@@ -240,7 +243,12 @@ public sealed class MarketplaceService(IUnitOfWork unitOfWork) : IMarketplaceSer
             }, cancellationToken);
         }
 
-        return await GetOwnedListingDetailOrThrowAsync(validatedFarmerProfileId, validatedListingId, cancellationToken);
+        var listingDetail = await GetOwnedListingDetailOrThrowAsync(
+            validatedFarmerProfileId,
+            validatedListingId,
+            cancellationToken);
+
+        return new ListingPriceUpdateResultDto(listingDetail, priceChanged);
     }
 
     public async Task<PagedFarmerProduceListingsResponseDto> GetFarmerListingsAsync(

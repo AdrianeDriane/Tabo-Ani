@@ -48,7 +48,7 @@ public interface IMarketplaceService
         Guid listingId,
         CancellationToken cancellationToken = default);
 
-    Task<FarmerProduceListingDetailResponseDto> UpdateListingPriceAsync(
+    Task<ListingPriceUpdateResultDto> UpdateListingPriceAsync(
         Guid farmerProfileId,
         Guid listingId,
         UpdateListingPriceRequestDto request,
