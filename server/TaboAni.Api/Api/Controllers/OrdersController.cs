@@ -29,38 +29,17 @@ public sealed class OrdersController(IOrderService orderService) : ControllerBas
             });
         }
 
-        try
-        {
-            var createdOrder = await _orderService.CreateOrderAsync(orderRequestDto, cancellationToken);
+        var createdOrder = await _orderService.CreateOrderAsync(orderRequestDto, cancellationToken);
 
-            return CreatedAtAction(
-                nameof(GetOrdersByUserId),
-                new { userId = createdOrder.BuyerUserId },
-                new ApiResponseDto<OrderResponseDto>
-                {
-                    Success = true,
-                    Message = "Order created successfully.",
-                    Data = createdOrder
-                });
-        }
-        catch (ArgumentException exception)
-        {
-            return BadRequest(new ErrorResponseDto
+        return CreatedAtAction(
+            nameof(GetOrdersByUserId),
+            new { userId = createdOrder.BuyerUserId },
+            new ApiResponseDto<OrderResponseDto>
             {
-                Success = false,
-                Message = "Order creation failed.",
-                Errors = [exception.Message]
+                Success = true,
+                Message = "Order created successfully.",
+                Data = createdOrder
             });
-        }
-        catch
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto
-            {
-                Success = false,
-                Message = "An unexpected error occurred while creating the order.",
-                Errors = ["Please try again later."]
-            });
-        }
     }
 
     [HttpGet("user/{userId:guid}")]
@@ -79,34 +58,13 @@ public sealed class OrdersController(IOrderService orderService) : ControllerBas
             });
         }
 
-        try
-        {
-            var orders = await _orderService.GetOrdersByUserIdAsync(userId, cancellationToken);
+        var orders = await _orderService.GetOrdersByUserIdAsync(userId, cancellationToken);
 
-            return Ok(new ApiResponseDto<IEnumerable<OrderResponseDto>>
-            {
-                Success = true,
-                Message = "Orders retrieved successfully.",
-                Data = orders
-            });
-        }
-        catch (ArgumentException exception)
+        return Ok(new ApiResponseDto<IEnumerable<OrderResponseDto>>
         {
-            return BadRequest(new ErrorResponseDto
-            {
-                Success = false,
-                Message = "Order lookup failed.",
-                Errors = [exception.Message]
-            });
-        }
-        catch
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResponseDto
-            {
-                Success = false,
-                Message = "An unexpected error occurred while retrieving orders.",
-                Errors = ["Please try again later."]
-            });
-        }
+            Success = true,
+            Message = "Orders retrieved successfully.",
+            Data = orders
+        });
     }
 }

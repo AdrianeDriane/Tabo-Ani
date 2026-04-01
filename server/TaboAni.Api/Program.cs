@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TaboAni.Api.ExceptionHandling;
 using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.Extensions;
 using TaboAni.Api.Data;
@@ -23,6 +24,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiDocumentation();
 builder.Services.AddApplicationDependencies();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -44,6 +47,7 @@ if (app.Environment.IsDevelopment())
     app.MapApiDocumentation();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
 app.MapControllers();
