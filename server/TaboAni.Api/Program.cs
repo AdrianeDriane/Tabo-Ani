@@ -3,6 +3,7 @@ using TaboAni.Api.ExceptionHandling;
 using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.Extensions;
 using TaboAni.Api.Data;
+using TaboAni.Api.Data.Seeding;
 using TaboAni.Api.Verification;
 
 if (args.Contains("--verify-schema", StringComparer.Ordinal))
@@ -10,6 +11,8 @@ if (args.Contains("--verify-schema", StringComparer.Ordinal))
     Environment.ExitCode = SchemaVerificationRunner.Run();
     return;
 }
+
+var shouldSeedFarmerData = args.Contains("--seed-farmer-data", StringComparer.Ordinal);
 
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
@@ -41,6 +44,16 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+if (shouldSeedFarmerData)
+{
+    // Short-circuit the host for one-off local data seeding.
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    await FarmerDevelopmentSeeder.SeedAsync(dbContext);
+    return;
+}
 
 if (app.Environment.IsDevelopment())
 {
