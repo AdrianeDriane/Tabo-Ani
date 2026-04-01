@@ -16,9 +16,11 @@ public static class DependencyInjectionExtension
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IMarketplaceRepository, MarketplaceRepository>();
+        services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IMarketplaceService, MarketplaceService>();
+        services.AddScoped<ICartService, CartService>();
 
         return services;
     }
