@@ -22,8 +22,9 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
         var orderItems = CreateOrderItems(orderRequestDto.OrderItems);
         var order = CreateOrder(orderRequestDto);
         var now = DateTimeOffset.UtcNow;
+        var orderNumber = await GenerateUniqueOrderNumberAsync(cancellationToken);
 
-        InitializeOrder(order, now);
+        InitializeOrder(order, now, orderNumber);
         AssignOrderId(orderItems, order.OrderId);
 
         await _unitOfWork.BeginTransactionAsync(cancellationToken);
@@ -33,12 +34,16 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
             await _unitOfWork.Orders.CreateOrderAsync(order, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
+            List<OrderItem> createdOrderItems = [];
             if (orderItems.Count > 0)
             {
                 orderItems.ForEach(orderItem => orderItem.OrderId = order.OrderId);
-                await _unitOfWork.OrderItems.CreateBulkOrderItemsAsync(orderItems, cancellationToken);
+                createdOrderItems = (await _unitOfWork.OrderItems
+                        .CreateBulkOrderItemsAsync(orderItems, cancellationToken))
+                    .ToList();
             }
 
+            ApplyOrderAmounts(order, createdOrderItems);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             var createdOrder = await _unitOfWork.Orders.GetOrderByIdAsync(order.OrderId, cancellationToken)
                 ?? throw new OrderOperationException("Order not found after creation.", OrderOperationFailureType.NotFound);
@@ -73,9 +78,29 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
             .ToList();
     }
 
-    private static void InitializeOrder(Order order, DateTimeOffset now)
+    private async Task<string> GenerateUniqueOrderNumberAsync(CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 10;
+
+        for (var attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            var orderNumber = OrderNumberGenerator.Generate();
+
+            if (!await _unitOfWork.Orders.OrderNumberExistsAsync(orderNumber, cancellationToken))
+            {
+                return orderNumber;
+            }
+        }
+
+        throw new OrderOperationException(
+            "Unable to generate a unique order number.",
+            OrderOperationFailureType.Conflict);
+    }
+
+    private static void InitializeOrder(Order order, DateTimeOffset now, string orderNumber)
     {
         order.OrderId = Guid.NewGuid();
+        order.OrderNumber = orderNumber;
         order.OrderStatus = OrderStatus.PendingDownpayment;
         order.CreatedAt = now;
         order.UpdatedAt = now;
@@ -87,6 +112,19 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
         {
             orderItem.OrderId = orderId;
         }
+    }
+
+    private static void ApplyOrderAmounts(Order order, IEnumerable<OrderItem> orderItems)
+    {
+        var amounts = OrderAmountCalculator.Calculate(
+            orderItems,
+            order.DeliveryFeeAmount,
+            order.PlatformFeeAmount,
+            order.RefundAmount);
+
+        order.SubtotalAmount = amounts.SubtotalAmount;
+        order.DownpaymentDueAmount = amounts.DownpaymentDueAmount;
+        order.FinalPaymentDueAmount = amounts.FinalPaymentDueAmount;
     }
 
     public async Task<OrderResponseDto> GetOrderByIdAsync(

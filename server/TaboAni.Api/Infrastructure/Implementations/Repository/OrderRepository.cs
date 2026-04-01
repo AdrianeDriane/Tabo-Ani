@@ -19,6 +19,15 @@ public sealed class OrderRepository(AppDbContext context) : IOrderRepository
         return order;
     }
 
+    public Task<bool> OrderNumberExistsAsync(string orderNumber, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(orderNumber);
+
+        return _context.Orders
+            .AsNoTracking()
+            .AnyAsync(order => order.OrderNumber == orderNumber, cancellationToken);
+    }
+
     // Retrievals
     public async Task<Order?> GetOrderByIdAsync(Guid orderId, CancellationToken cancellationToken = default)
     {

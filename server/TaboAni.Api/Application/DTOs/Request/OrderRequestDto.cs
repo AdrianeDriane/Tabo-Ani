@@ -5,7 +5,6 @@ namespace TaboAni.Api.Application.DTOs.Request;
 public class OrderRequestDto
 {
     public Guid BuyerUserId { get; set; }
-    public string OrderNumber { get; set; } = string.Empty;
     public OrderStatus OrderStatus { get; set; }
     public decimal DownpaymentDueAmount { get; set; }
     public decimal DownpaymentPaidAmount { get; set; }
@@ -31,7 +30,6 @@ public class OrderRequestDto
 public class InitialOrderRequestDto
 {
     public Guid BuyerUserId { get; set; }
-    public string OrderNumber { get; set; } = string.Empty;
     public string DeliveryLocationText { get; set; } = string.Empty;
     public decimal? DeliveryLatitude { get; set; }
     public decimal? DeliveryLongitude { get; set; }
