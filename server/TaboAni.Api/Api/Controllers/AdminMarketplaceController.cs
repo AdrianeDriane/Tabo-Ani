@@ -6,7 +6,7 @@ using TaboAni.Api.Application.Interfaces.Service;
 namespace TaboAni.Api.Controllers;
 
 [ApiController]
-[Route("api/admin/marketplace")]
+[Route("api/v1/admin/marketplace")]
 public sealed class AdminMarketplaceController(IMarketplaceService marketplaceService) : ControllerBase
 {
     private readonly IMarketplaceService _marketplaceService = marketplaceService;

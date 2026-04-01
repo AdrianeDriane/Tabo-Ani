@@ -6,7 +6,7 @@ using TaboAni.Api.Application.Interfaces.Service;
 namespace TaboAni.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/orders")]
 public sealed class OrdersController(IOrderService orderService) : ControllerBase
 {
     private readonly IOrderService _orderService = orderService;
