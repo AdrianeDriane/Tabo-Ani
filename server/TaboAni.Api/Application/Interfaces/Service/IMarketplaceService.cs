@@ -30,6 +30,30 @@ public interface IMarketplaceService
         Guid listingId,
         CancellationToken cancellationToken = default);
 
+    Task<InventoryBatchResponseDto> CreateInventoryBatchAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        CreateInventoryBatchRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    Task<InventoryBatchResponseDto> UpdateInventoryBatchAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        Guid batchId,
+        UpdateInventoryBatchRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    Task<FarmerListingInventoryResponseDto> GetListingInventoryAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        CancellationToken cancellationToken = default);
+
+    Task<FarmerProduceListingDetailResponseDto> UpdateListingPriceAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        UpdateListingPriceRequestDto request,
+        CancellationToken cancellationToken = default);
+
     Task<PagedFarmerProduceListingsResponseDto> GetFarmerListingsAsync(
         Guid farmerProfileId,
         FarmerOwnListingsQueryRequestDto query,

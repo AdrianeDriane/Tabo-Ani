@@ -94,10 +94,32 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
         return _context.ProduceListings.AddAsync(listing, cancellationToken).AsTask();
     }
 
+    public Task AddInventoryBatchAsync(
+        ProduceInventoryBatch inventoryBatch,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.ProduceInventoryBatches.AddAsync(inventoryBatch, cancellationToken).AsTask();
+    }
+
+    public Task AddListingPriceHistoryAsync(
+        ListingPriceHistory priceHistory,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.ListingPriceHistory.AddAsync(priceHistory, cancellationToken).AsTask();
+    }
+
     public Task<ProduceListing?> GetListingByIdForUpdateAsync(Guid listingId, CancellationToken cancellationToken = default)
     {
         return _context.ProduceListings
             .SingleOrDefaultAsync(listing => listing.ProduceListingId == listingId, cancellationToken);
+    }
+
+    public Task<ProduceInventoryBatch?> GetInventoryBatchByIdForUpdateAsync(
+        Guid batchId,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.ProduceInventoryBatches
+            .SingleOrDefaultAsync(batch => batch.ProduceInventoryBatchId == batchId, cancellationToken);
     }
 
     public Task<Guid?> GetListingOwnerFarmerProfileIdAsync(Guid listingId, CancellationToken cancellationToken = default)
@@ -107,6 +129,21 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
             .Where(listing => listing.ProduceListingId == listingId)
             .Select(listing => (Guid?)listing.FarmerProfileId)
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<bool> IsInventoryBatchCodeInUseAsync(
+        Guid listingId,
+        string batchCode,
+        Guid? excludeBatchId,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.ProduceInventoryBatches
+            .AsNoTracking()
+            .AnyAsync(
+                batch => batch.ProduceListingId == listingId &&
+                         batch.BatchCode == batchCode &&
+                         (!excludeBatchId.HasValue || batch.ProduceInventoryBatchId != excludeBatchId.Value),
+                cancellationToken);
     }
 
     public Task<FarmerProduceListingDetailQueryResultDto?> GetFarmerListingDetailAsync(
@@ -149,6 +186,57 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
                 listing.CreatedAt,
                 listing.UpdatedAt))
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<FarmerListingInventoryQueryResultDto?> GetListingInventoryAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        CancellationToken cancellationToken = default)
+    {
+        var listing = await _context.ProduceListings
+            .AsNoTracking()
+            .Where(produceListing =>
+                produceListing.FarmerProfileId == farmerProfileId &&
+                produceListing.ProduceListingId == listingId)
+            .Select(produceListing => new
+            {
+                produceListing.ProduceListingId,
+                produceListing.ListingTitle,
+                produceListing.ProduceName
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (listing is null)
+        {
+            return null;
+        }
+
+        // Keep inventory reads bounded to two SQL queries: one for the listing header and one for the batch projection.
+        var batches = await _context.ProduceInventoryBatches
+            .AsNoTracking()
+            .Where(batch => batch.ProduceListingId == listingId)
+            .OrderByDescending(batch => batch.UpdatedAt)
+            .ThenBy(batch => batch.BatchCode)
+            .ThenBy(batch => batch.ProduceInventoryBatchId)
+            .Select(batch => new InventoryBatchQueryResultDto(
+                batch.ProduceInventoryBatchId,
+                batch.ProduceListingId,
+                batch.BatchCode,
+                batch.EstimatedHarvestDate,
+                batch.ActualHarvestDate,
+                batch.AvailableQuantityKg,
+                batch.ReservedQuantityKg,
+                batch.InventoryStatus,
+                batch.Notes,
+                batch.CreatedAt,
+                batch.UpdatedAt))
+            .ToListAsync(cancellationToken);
+
+        return new FarmerListingInventoryQueryResultDto(
+            listing.ProduceListingId,
+            listing.ListingTitle,
+            listing.ProduceName,
+            batches);
     }
 
     public async Task<PagedFarmerProduceListingQueryResultDto> GetFarmerListingsAsync(
