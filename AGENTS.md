@@ -78,7 +78,7 @@ Do not commit generated output from `client/dist/`, `client/node_modules/`, `ser
 
 ## Final Response
 
-Always include:
+Always include (only if we are shipping features, otherwise follow your default response format):
 
 1. **Summary of Changes**
    - What was implemented or modified and why.
