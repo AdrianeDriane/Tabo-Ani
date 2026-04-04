@@ -8,6 +8,8 @@ using TaboAni.Api.Application.Validation.Order;
 
 namespace TaboAni.Api.Application.Implementations.Service;
 
+
+// TODO: Implement order creation logic, including inventory reservation and payment processing
 public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
@@ -19,7 +21,6 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
         ArgumentNullException.ThrowIfNull(orderRequestDto);
 
         var order = orderRequestDto.ToEntity();
-        order.EnsureIdentityAndTimestamps(DateTimeOffset.UtcNow);
 
         OrderResponseDto response = null!;
 
