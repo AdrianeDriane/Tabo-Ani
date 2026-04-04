@@ -1,10 +1,9 @@
 import { useState } from "react";
 import type { ComponentType } from "react";
 import { SIGNUP_STEPS, TOTAL_SIGNUP_STEPS } from "../../constants/signupSteps";
-import { buildSignupPayload, resendVerification, signup, verifyEmail } from "../../api/auth.api";
+import { buildSignupPayload, resendVerification, signup } from "../../api/auth.api";
 import { composeLocationText } from "../../utils/signup";
 import type {
-  EmailVerificationStatusResponse,
   RoleCode,
   SignupFormErrors,
   SignupFormState,
@@ -57,7 +56,6 @@ const INITIAL_FORM_STATE: SignupFormState = {
   },
   hasAcceptedTerms: false,
   hasAcceptedPrivacy: false,
-  verificationToken: "",
 };
 
 export function SignupFlow() {
@@ -65,12 +63,18 @@ export function SignupFlow() {
   const [form, setForm] = useState<SignupFormState>(INITIAL_FORM_STATE);
   const [errors, setErrors] = useState<SignupFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null
+  );
+  const [verificationNotice, setVerificationNotice] = useState<string | null>(
+    null
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerificationSubmitting, setIsVerificationSubmitting] = useState(false);
-  const [signupResponse, setSignupResponse] = useState<SignupResponse | null>(null);
-  const [emailVerificationStatus, setEmailVerificationStatus] =
-    useState<EmailVerificationStatusResponse | null>(null);
+  const [isVerificationSubmitting, setIsVerificationSubmitting] =
+    useState(false);
+  const [signupResponse, setSignupResponse] = useState<SignupResponse | null>(
+    null
+  );
 
   const currentStepDefinition = SIGNUP_STEPS[currentStep - 1];
   const CurrentStepComponent = SIGNUP_STEP_COMPONENTS[currentStep];
@@ -99,6 +103,7 @@ export function SignupFlow() {
   function handleBack() {
     setSubmitError(null);
     setVerificationError(null);
+    setVerificationNotice(null);
     setErrors({});
     setCurrentStep((previousStep) => {
       if (previousStep <= 1) {
@@ -110,8 +115,15 @@ export function SignupFlow() {
   }
 
   function handleAccountFieldChange(
-    field: "email" | "mobileNumber" | "password" | "confirmPassword" | "firstName" | "lastName" | "displayName",
-    value: string,
+    field:
+      | "email"
+      | "mobileNumber"
+      | "password"
+      | "confirmPassword"
+      | "firstName"
+      | "lastName"
+      | "displayName",
+    value: string
   ) {
     setForm((currentForm) => ({
       ...currentForm,
@@ -151,7 +163,7 @@ export function SignupFlow() {
 
   function handleBuyerFieldChange(
     field: "businessName" | "businessType" | "region" | "province" | "city",
-    value: string,
+    value: string
   ) {
     setForm((currentForm) => ({
       ...currentForm,
@@ -179,7 +191,7 @@ export function SignupFlow() {
 
   function handleFarmerFieldChange(
     field: "farmName" | "region" | "province" | "city",
-    value: string,
+    value: string
   ) {
     setForm((currentForm) => ({
       ...currentForm,
@@ -205,7 +217,10 @@ export function SignupFlow() {
     });
   }
 
-  function handleAgreementChange(field: "hasAcceptedTerms" | "hasAcceptedPrivacy", checked: boolean) {
+  function handleAgreementChange(
+    field: "hasAcceptedTerms" | "hasAcceptedPrivacy",
+    checked: boolean
+  ) {
     setForm((currentForm) => ({
       ...currentForm,
       [field]: checked,
@@ -214,18 +229,6 @@ export function SignupFlow() {
     setErrors((currentErrors) => {
       const nextErrors = { ...currentErrors };
       delete nextErrors[field];
-      return nextErrors;
-    });
-  }
-
-  function handleVerificationTokenChange(value: string) {
-    setForm((currentForm) => ({
-      ...currentForm,
-      verificationToken: value,
-    }));
-    setErrors((currentErrors) => {
-      const nextErrors = { ...currentErrors };
-      delete nextErrors.verificationToken;
       return nextErrors;
     });
   }
@@ -239,53 +242,31 @@ export function SignupFlow() {
 
     setIsSubmitting(true);
     setSubmitError(null);
+    setVerificationError(null);
+    setVerificationNotice(null);
     setErrors({});
 
     try {
       const buyerLocationText = composeLocationText(form.buyerApplication.location);
-      const farmerLocationText = composeLocationText(form.farmerApplication.location);
-      const response = await signup(buildSignupPayload(form, buyerLocationText, farmerLocationText));
+      const farmerLocationText = composeLocationText(
+        form.farmerApplication.location
+      );
+      const response = await signup(
+        buildSignupPayload(form, buyerLocationText, farmerLocationText)
+      );
+
       setSignupResponse(response.data);
-      setEmailVerificationStatus({
-        userId: response.data.userId,
-        email: response.data.email,
-        isEmailVerified: response.data.isEmailVerified,
-        verifiedAt: null,
-        emailVerificationTokenPreview: response.data.emailVerificationTokenPreview,
-      });
-      setForm((currentForm) => ({
-        ...currentForm,
-        verificationToken: response.data.emailVerificationTokenPreview ?? currentForm.verificationToken,
-      }));
+      setVerificationNotice(
+        `We sent a verification link to ${response.data.email}. Open that email to activate your account.`
+      );
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Failed to create your account.");
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Failed to create your account."
+      );
     } finally {
       setIsSubmitting(false);
-    }
-  }
-
-  async function handleVerifyEmail() {
-    const verificationErrors = validateVerificationToken(form.verificationToken);
-    if (Object.keys(verificationErrors).length > 0) {
-      setFieldError(verificationErrors);
-      return;
-    }
-
-    const emailToVerify = signupResponse?.email ?? form.email;
-
-    setIsVerificationSubmitting(true);
-    setVerificationError(null);
-
-    try {
-      const response = await verifyEmail({
-        email: emailToVerify.trim(),
-        token: form.verificationToken.trim(),
-      });
-      setEmailVerificationStatus(response.data);
-    } catch (error) {
-      setVerificationError(error instanceof Error ? error.message : "Failed to verify email.");
-    } finally {
-      setIsVerificationSubmitting(false);
     }
   }
 
@@ -298,18 +279,19 @@ export function SignupFlow() {
 
     setIsVerificationSubmitting(true);
     setVerificationError(null);
+    setVerificationNotice(null);
 
     try {
-      const response = await resendVerification(emailToVerify.trim());
-      setEmailVerificationStatus(response.data);
-      if (response.data.emailVerificationTokenPreview) {
-        setForm((currentForm) => ({
-          ...currentForm,
-          verificationToken: response.data.emailVerificationTokenPreview ?? currentForm.verificationToken,
-        }));
-      }
+      await resendVerification(emailToVerify.trim());
+      setVerificationNotice(
+        "If your account is eligible, a new verification link is on its way. Please check your inbox and spam folder."
+      );
     } catch (error) {
-      setVerificationError(error instanceof Error ? error.message : "Failed to resend verification.");
+      setVerificationError(
+        error instanceof Error
+          ? error.message
+          : "Failed to resend verification."
+      );
     } finally {
       setIsVerificationSubmitting(false);
     }
@@ -333,8 +315,8 @@ export function SignupFlow() {
         isVerificationSubmitting={isVerificationSubmitting}
         submitError={submitError}
         verificationError={verificationError}
+        verificationNotice={verificationNotice}
         signupResponse={signupResponse}
-        emailVerificationStatus={emailVerificationStatus}
         onContinue={handleContinue}
         onBack={handleBack}
         onAccountFieldChange={handleAccountFieldChange}
@@ -342,16 +324,17 @@ export function SignupFlow() {
         onBuyerFieldChange={handleBuyerFieldChange}
         onFarmerFieldChange={handleFarmerFieldChange}
         onAgreementChange={handleAgreementChange}
-        onVerificationTokenChange={handleVerificationTokenChange}
         onSubmitSignup={handleSubmitSignup}
-        onVerifyEmail={handleVerifyEmail}
         onResendVerification={handleResendVerification}
       />
     </SignupShell>
   );
 }
 
-function validateCurrentStep(step: SignupStepId, form: SignupFormState): SignupFormErrors {
+function validateCurrentStep(
+  step: SignupStepId,
+  form: SignupFormState
+): SignupFormErrors {
   switch (step) {
     case 1:
       return validateAccountStep(form);
@@ -381,7 +364,10 @@ function validateAccountStep(form: SignupFormState): SignupFormErrors {
     nextErrors.email = "Email is required.";
   }
 
-  if (form.mobileNumber.trim() && form.mobileNumber.replace(/\D/g, "").length < 10) {
+  if (
+    form.mobileNumber.trim() &&
+    form.mobileNumber.replace(/\D/g, "").length < 10
+  ) {
     nextErrors.mobileNumber = "Mobile number must contain at least 10 digits.";
   }
 
@@ -461,14 +447,4 @@ function validateReviewStep(form: SignupFormState): SignupFormErrors {
   }
 
   return nextErrors;
-}
-
-function validateVerificationToken(token: string): SignupFormErrors {
-  if (!token.trim()) {
-    return {
-      verificationToken: "Verification token is required.",
-    };
-  }
-
-  return {};
 }

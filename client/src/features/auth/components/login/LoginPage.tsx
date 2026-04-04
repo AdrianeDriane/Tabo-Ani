@@ -1,12 +1,14 @@
 import type { FormEvent } from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const HERO_IMAGE_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuD1YrUv4NDMS7DVCbp5p3DmxAC_HSDHcqqVvr0CL_s4mfDvlr2TZFtoQOSdLWNSKvlo9ScJo9uEMjCTTCnwt8rGCN8geAT85Egv8-Q7JNJ3QuhXKjoGxsGmnuxfVjo1iJxtQ8va5GXmeIIYp6MwoLNPYEWkxHZ_-io1_O8ndRYVKTh2UFPXWBPRtEuzqOle1_QsA75oZ5MTeVuTcf-TEzqrD4Oo_RNx5VJuhXZuhamfN0-bqydwiqKOYhzXnCQ-3BEtDM2fheAXGDo2";
 
 export function LoginPage() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [searchParams] = useSearchParams();
+  const hasEmailVerifiedNotice = searchParams.get("emailVerified") === "1";
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,6 +70,12 @@ export function LoginPage() {
 
             <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl shadow-agri-accent/5 sm:p-8 lg:p-10">
               <div className="mb-8 sm:mb-10">
+                {hasEmailVerifiedNotice ? (
+                  <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    Your email has been verified. You can now log in to your
+                    Tabo-Ani account.
+                  </div>
+                ) : null}
                 <h2 className="mb-2 font-display text-3xl font-extrabold text-slate-900">
                   Login
                 </h2>

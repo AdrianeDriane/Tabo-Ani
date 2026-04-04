@@ -121,7 +121,7 @@ export function SignupStep1Credentials({
           className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf"
         />
         <p className="mt-1 text-xs text-slate-500">
-          Mobile verification is not required in this signup flow yet.
+          Optional, but recommended for account recovery and support follow-up.
         </p>
         {resolveFieldError(errors, "mobileNumber") ? (
           <p className="mt-1 text-xs text-red-600">{errors.mobileNumber}</p>
