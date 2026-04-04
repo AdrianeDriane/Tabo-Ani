@@ -76,9 +76,16 @@ Do not commit generated output from `client/dist/`, `client/node_modules/`, `ser
 - If full validation (build/test/run) cannot be executed, clearly state what was not verified.
 - Prefer predictable, testable behavior over assumptions.
 
+## Interaction Rules
+
+- Do not assume every request is an implementation task.
+- If the user is asking a question, giving feedback, requesting review, or asking for planning help, answer directly without pretending code changes were made.
+- Only use implementation-oriented response structure when files or code were actually modified.
+- Prefer the narrowest applicable behavior for the current request.
+
 ## Final Response
 
-Always include (only if we are shipping features, otherwise follow your default response format):
+When actual code, configuration, or file changes are made, include:
 
 1. **Summary of Changes**
    - What was implemented or modified and why.
@@ -96,6 +103,17 @@ Always include (only if we are shipping features, otherwise follow your default 
 5. **Assumptions / Risks**
    - Any assumptions made due to missing context.
    - Any potential side effects or edge cases.
+
+For non-implementation requests such as:
+
+- answering questions
+- explaining concepts
+- reviewing architecture
+- planning
+- prompt/task structuring
+- discussing options
+
+do **not** force the implementation response format. Respond in the format most appropriate to the user's request.
 
 Keep explanations concise, practical, and focused on helping the developer quickly verify and move forward.
 Avoid unnecessary verbosity or theoretical explanations.
