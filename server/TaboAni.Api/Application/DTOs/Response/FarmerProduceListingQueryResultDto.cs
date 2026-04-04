@@ -1,3 +1,5 @@
+using TaboAni.Api.Domain.Enums;
+
 namespace TaboAni.Api.Application.DTOs.Response;
 
 public sealed record FarmerProduceListingDetailQueryResultDto(
@@ -12,7 +14,7 @@ public sealed record FarmerProduceListingDetailQueryResultDto(
     decimal PricePerKg,
     decimal MinimumOrderKg,
     decimal? MaximumOrderKg,
-    string ListingStatus,
+    ListingStatus ListingStatus,
     string PrimaryLocationText,
     decimal? PrimaryLatitude,
     decimal? PrimaryLongitude,
@@ -28,7 +30,7 @@ public sealed record FarmerProduceListingListItemQueryResultDto(
     string ListingTitle,
     string ProduceName,
     decimal PricePerKg,
-    string ListingStatus,
+    ListingStatus ListingStatus,
     string PrimaryLocationText,
     bool IsPremiumBoosted,
     string? PrimaryImageUrl,

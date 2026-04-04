@@ -1,3 +1,5 @@
+using TaboAni.Api.Domain.Enums;
+
 namespace TaboAni.Api.Application.DTOs.Response;
 
 public sealed record CartListingSnapshotDto(
@@ -9,6 +11,6 @@ public sealed record CartListingSnapshotDto(
     decimal PricePerKg,
     decimal MinimumOrderKg,
     decimal? MaximumOrderKg,
-    string ListingStatus,
+    ListingStatus ListingStatus,
     string PrimaryLocationText,
     string? PrimaryImageUrl);

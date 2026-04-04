@@ -1,3 +1,5 @@
+using TaboAni.Api.Domain.Enums;
+
 namespace TaboAni.Api.Application.DTOs.Response;
 
 public sealed record MarketplaceListingQueryResultItemDto(
@@ -14,7 +16,7 @@ public sealed record MarketplaceListingQueryResultItemDto(
     decimal? MaximumOrderKg,
     string PrimaryLocationText,
     bool IsPremiumBoosted,
-    string ListingStatus,
+    ListingStatus ListingStatus,
     string? PrimaryImageUrl,
     DateTimeOffset CreatedAt);
 

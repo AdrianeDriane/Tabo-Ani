@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TaboAni.Api.Domain.Entities;
-using TaboAni.Api.Domain.Validation;
+using TaboAni.Api.Domain.Enums;
 
 namespace TaboAni.Api.Data.Seeding;
 
@@ -77,7 +77,7 @@ internal static class FarmerDevelopmentSeeder
                 95.00m,
                 5.000m,
                 80.000m,
-                ListingStatusPolicy.Active,
+                ListingStatus.Active,
                 "Baguio City, Benguet",
                 16.402300m,
                 120.596000m,
@@ -97,7 +97,7 @@ internal static class FarmerDevelopmentSeeder
                 120.00m,
                 10.000m,
                 150.000m,
-                ListingStatusPolicy.Inactive,
+                ListingStatus.Inactive,
                 "La Trinidad, Benguet",
                 16.455100m,
                 120.587500m,
@@ -263,7 +263,7 @@ internal static class FarmerDevelopmentSeeder
         listing.PricePerKg = seed.PricePerKg;
         listing.MinimumOrderKg = seed.MinimumOrderKg;
         listing.MaximumOrderKg = seed.MaximumOrderKg;
-        listing.ListingStatus = ListingStatusPolicy.Normalize(seed.ListingStatus);
+        listing.ListingStatus = seed.ListingStatus;
         listing.PrimaryLocationText = seed.PrimaryLocationText;
         listing.PrimaryLatitude = seed.PrimaryLatitude;
         listing.PrimaryLongitude = seed.PrimaryLongitude;
@@ -331,7 +331,7 @@ internal static class FarmerDevelopmentSeeder
         decimal PricePerKg,
         decimal MinimumOrderKg,
         decimal? MaximumOrderKg,
-        string ListingStatus,
+        ListingStatus ListingStatus,
         string PrimaryLocationText,
         decimal? PrimaryLatitude,
         decimal? PrimaryLongitude,

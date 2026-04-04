@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaboAni.Api.Domain.Entities;
+using TaboAni.Api.Domain.Enums;
 
 namespace TaboAni.Api.Data.Configurations;
 
@@ -16,7 +17,12 @@ internal sealed class ProduceListingConfiguration : IEntityTypeConfiguration<Pro
         builder.ConfigureDecimal(x => x.PricePerKg, 12, 2);
         builder.ConfigureDecimal(x => x.MinimumOrderKg, 12, 3).HasDefaultValue(1.000m);
         builder.ConfigureOptionalDecimal(x => x.MaximumOrderKg, 12, 3);
-        builder.ConfigureRequiredText(x => x.ListingStatus);
+        builder.Property(x => x.ListingStatus)
+            .HasConversion(
+                listingStatus => listingStatus.ToString().ToUpperInvariant(),
+                listingStatus => Enum.Parse<ListingStatus>(listingStatus, true))
+            .HasColumnType("text")
+            .IsRequired();
         builder.ConfigureRequiredText(x => x.PrimaryLocationText);
         builder.ConfigureOptionalDecimal(x => x.PrimaryLatitude, 9, 6);
         builder.ConfigureOptionalDecimal(x => x.PrimaryLongitude, 9, 6);
