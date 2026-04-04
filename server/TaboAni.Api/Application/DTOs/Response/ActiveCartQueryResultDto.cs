@@ -1,3 +1,5 @@
+using TaboAni.Api.Domain.Enums;
+
 namespace TaboAni.Api.Application.DTOs.Response;
 
 public sealed record CartItemQueryResultDto(
@@ -17,5 +19,5 @@ public sealed record CartItemQueryResultDto(
 public sealed record ActiveCartQueryResultDto(
     Guid CartId,
     Guid UserId,
-    string CartStatus,
+    CartStatus CartStatus,
     IReadOnlyList<CartItemQueryResultDto> Items);

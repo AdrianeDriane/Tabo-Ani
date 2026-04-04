@@ -1,5 +1,6 @@
 using TaboAni.Api.Domain.Exceptions;
-using TaboAni.Api.Domain.Validation;
+using TaboAni.Api.Domain.Enums;
+using TaboAni.Api.Domain.Policy;
 
 namespace TaboAni.Api.Domain.Entities;
 
@@ -7,7 +8,7 @@ public class Cart
 {
     public Guid CartId { get; set; }
     public Guid UserId { get; set; }
-    public string CartStatus { get; set; } = string.Empty;
+    public CartStatus CartStatus { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
@@ -22,7 +23,7 @@ public class Cart
         {
             CartId = Guid.NewGuid(),
             UserId = userId,
-            CartStatus = CartStatusPolicy.Active,
+            CartStatus = CartStatus.Active,
             CreatedAt = now,
             UpdatedAt = now
         };

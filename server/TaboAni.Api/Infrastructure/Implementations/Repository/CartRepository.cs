@@ -3,7 +3,7 @@ using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Interfaces.Repository;
 using TaboAni.Api.Data;
 using TaboAni.Api.Domain.Entities;
-using TaboAni.Api.Domain.Validation;
+using TaboAni.Api.Domain.Enums;
 
 namespace TaboAni.Api.Infrastructure.Implementations.Repository;
 
@@ -92,7 +92,7 @@ public sealed class CartRepository(AppDbContext context) : ICartRepository
     {
         var cart = await _context.Carts
             .AsNoTracking()
-            .Where(existingCart => existingCart.UserId == userId && existingCart.CartStatus == CartStatusPolicy.Active)
+            .Where(existingCart => existingCart.UserId == userId && existingCart.CartStatus == CartStatus.Active)
             .Select(existingCart => new
             {
                 existingCart.CartId,
