@@ -1,10 +1,10 @@
 using Mapster;
 using TaboAni.Api.Application.Configuration.MapsterConfiguration;
+using TaboAni.Api.Application.Implementations.Service;
 using TaboAni.Api.Application.Interfaces.Repository;
 using TaboAni.Api.Application.Interfaces.Service;
 using TaboAni.Api.Infrastructure.Implementations;
 using TaboAni.Api.Infrastructure.Implementations.Repository;
-using TaboAni.Api.Infrastructure.Implementations.Service;
 
 namespace TaboAni.Api.Application.Extensions;
 

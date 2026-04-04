@@ -3,8 +3,10 @@ using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Extensions.MappingExtensions;
 using TaboAni.Api.Application.Interfaces.Repository;
 using TaboAni.Api.Application.Interfaces.Service;
+using TaboAni.Api.Application.Common;
+using TaboAni.Api.Application.Validation.Order;
 
-namespace TaboAni.Api.Infrastructure.Implementations.Service;
+namespace TaboAni.Api.Application.Implementations.Service;
 
 public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
 {
@@ -17,47 +19,26 @@ public sealed class OrderService(IUnitOfWork unitOfWork) : IOrderService
         ArgumentNullException.ThrowIfNull(orderRequestDto);
 
         var order = orderRequestDto.ToEntity();
-        var now = DateTimeOffset.UtcNow;
+        order.EnsureIdentityAndTimestamps(DateTimeOffset.UtcNow);
 
-        if (order.OrderId == Guid.Empty)
-        {
-            order.OrderId = Guid.NewGuid();
-        }
+        OrderResponseDto response = null!;
 
-        if (order.CreatedAt == default)
-        {
-            order.CreatedAt = now;
-        }
-
-        order.UpdatedAt = order.UpdatedAt == default ? now : order.UpdatedAt;
-
-        await _unitOfWork.BeginTransactionAsync(cancellationToken);
-
-        try
+        await ServiceTransactionExecutor.ExecuteWithinTransactionAsync(_unitOfWork, async () =>
         {
             var createdOrder = await _unitOfWork.Orders.CreateOrderAsync(order, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            await _unitOfWork.CommitAsync(cancellationToken);
+            response = createdOrder.ToResponseDto();
+        }, cancellationToken);
 
-            return createdOrder.ToResponseDto();
-        }
-        catch
-        {
-            await _unitOfWork.RollbackAsync(cancellationToken);
-            throw;
-        }
+        return response;
     }
 
     public async Task<IEnumerable<OrderResponseDto>> GetOrdersByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
-        if (userId == Guid.Empty)
-        {
-            throw new ArgumentException("User ID is required.", nameof(userId));
-        }
-
-        var orders = await _unitOfWork.Orders.GetOrdersByUserIdAsync(userId, cancellationToken);
+        var validatedUserId = OrderValidationHelper.ValidateUserId(userId);
+        var orders = await _unitOfWork.Orders.GetOrdersByUserIdAsync(validatedUserId, cancellationToken);
 
         return orders.Select(order => order.ToResponseDto()).ToList();
     }

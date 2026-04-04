@@ -3,7 +3,7 @@ using TaboAni.Api.Application.DTOs.Request;
 using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Interfaces.Service;
 
-namespace TaboAni.Api.Controllers;
+namespace TaboAni.Api.Controllers.V1;
 
 [ApiController]
 [Route("api/v1/marketplace")]
