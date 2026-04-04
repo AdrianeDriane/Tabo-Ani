@@ -9,7 +9,30 @@ public sealed class SignupRequestDto
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
     public string? DisplayName { get; init; }
-    public string RoleCode { get; init; } = string.Empty;
+    public SignupBuyerApplicationRequestDto? BuyerApplication { get; init; }
+    public SignupFarmerApplicationRequestDto? FarmerApplication { get; init; }
+}
+
+public sealed class SignupBuyerApplicationRequestDto
+{
     public string BusinessName { get; init; } = string.Empty;
+    public string BusinessType { get; init; } = string.Empty;
     public string LocationText { get; init; } = string.Empty;
+}
+
+public sealed class SignupFarmerApplicationRequestDto
+{
+    public string FarmName { get; init; } = string.Empty;
+    public string LocationText { get; init; } = string.Empty;
+}
+
+public sealed class ResendEmailVerificationRequestDto
+{
+    public string Email { get; init; } = string.Empty;
+}
+
+public sealed class VerifyEmailRequestDto
+{
+    public string Email { get; init; } = string.Empty;
+    public string Token { get; init; } = string.Empty;
 }

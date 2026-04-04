@@ -26,6 +26,7 @@ public static class DependencyInjectionExtension
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+        services.AddSingleton<IEmailVerificationNotifier, LoggingEmailVerificationNotifier>();
 
         return services;
     }

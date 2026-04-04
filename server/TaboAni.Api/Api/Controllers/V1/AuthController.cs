@@ -29,4 +29,42 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
                 Data = signupResponse
             });
     }
+
+    [HttpPost("verify-email/resend")]
+    [ProducesResponseType(typeof(ApiResponseDto<EmailVerificationStatusResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ResendVerification(
+        [FromBody] ResendEmailVerificationRequestDto requestDto,
+        CancellationToken cancellationToken)
+    {
+        var verificationStatus = await _authService.ResendVerificationAsync(requestDto, cancellationToken);
+
+        return Ok(new ApiResponseDto<EmailVerificationStatusResponseDto>
+        {
+            Success = true,
+            Message = "Verification instructions have been sent.",
+            Data = verificationStatus
+        });
+    }
+
+    [HttpPost("verify-email")]
+    [ProducesResponseType(typeof(ApiResponseDto<EmailVerificationStatusResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> VerifyEmail(
+        [FromBody] VerifyEmailRequestDto requestDto,
+        CancellationToken cancellationToken)
+    {
+        var verificationStatus = await _authService.VerifyEmailAsync(requestDto, cancellationToken);
+
+        return Ok(new ApiResponseDto<EmailVerificationStatusResponseDto>
+        {
+            Success = true,
+            Message = "Email verified successfully.",
+            Data = verificationStatus
+        });
+    }
 }

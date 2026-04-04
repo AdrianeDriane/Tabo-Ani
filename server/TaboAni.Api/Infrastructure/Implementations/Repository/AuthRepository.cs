@@ -24,28 +24,76 @@ public sealed class AuthRepository(AppDbContext context) : IAuthRepository
         return _context.Roles.SingleOrDefaultAsync(role => role.RoleCode == roleCode, cancellationToken);
     }
 
+    public Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
+    {
+        return _context.Users.SingleOrDefaultAsync(user => user.Email == email, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<KycApplication>> GetKycApplicationsByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.KycApplications
+            .Where(application => application.UserId == userId)
+            .ToListAsync(cancellationToken);
+    }
+
     public Task AddUserAsync(User user, CancellationToken cancellationToken = default)
     {
-        return _context.Users.AddAsync(user, cancellationToken).AsTask();
+        _context.Users.Add(user);
+        return Task.CompletedTask;
     }
 
     public Task AddUserRoleAsync(UserRole userRole, CancellationToken cancellationToken = default)
     {
-        return _context.UserRoles.AddAsync(userRole, cancellationToken).AsTask();
+        _context.UserRoles.Add(userRole);
+        return Task.CompletedTask;
     }
 
     public Task AddBuyerProfileAsync(BuyerProfile buyerProfile, CancellationToken cancellationToken = default)
     {
-        return _context.BuyerProfiles.AddAsync(buyerProfile, cancellationToken).AsTask();
+        _context.BuyerProfiles.Add(buyerProfile);
+        return Task.CompletedTask;
     }
 
     public Task AddFarmerProfileAsync(FarmerProfile farmerProfile, CancellationToken cancellationToken = default)
     {
-        return _context.FarmerProfiles.AddAsync(farmerProfile, cancellationToken).AsTask();
+        _context.FarmerProfiles.Add(farmerProfile);
+        return Task.CompletedTask;
     }
 
     public Task AddDistributorProfileAsync(DistributorProfile distributorProfile, CancellationToken cancellationToken = default)
     {
-        return _context.DistributorProfiles.AddAsync(distributorProfile, cancellationToken).AsTask();
+        _context.DistributorProfiles.Add(distributorProfile);
+        return Task.CompletedTask;
+    }
+
+    public Task AddKycApplicationAsync(KycApplication kycApplication, CancellationToken cancellationToken = default)
+    {
+        _context.KycApplications.Add(kycApplication);
+        return Task.CompletedTask;
+    }
+
+    public Task AddEmailVerificationTokenAsync(
+        EmailVerificationToken emailVerificationToken,
+        CancellationToken cancellationToken = default)
+    {
+        _context.EmailVerificationTokens.Add(emailVerificationToken);
+        return Task.CompletedTask;
+    }
+
+    public Task<EmailVerificationToken?> GetActiveEmailVerificationTokenAsync(
+        Guid userId,
+        string tokenHash,
+        DateTimeOffset now,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.EmailVerificationTokens
+            .Where(token => token.UserId == userId &&
+                            token.TokenHash == tokenHash &&
+                            token.ConsumedAt == null &&
+                            token.ExpiresAt >= now)
+            .OrderByDescending(token => token.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

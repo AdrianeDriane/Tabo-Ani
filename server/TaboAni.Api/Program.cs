@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TaboAni.Api.ExceptionHandling;
 using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.Extensions;
@@ -19,9 +20,22 @@ DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "Missing ConnectionStrings:DefaultConnection. Set it in server/TaboAni.Api/.env.");
+
+var connectionStringBuilder = new NpgsqlConnectionStringBuilder(rawConnectionString);
+if (connectionStringBuilder.Pooling &&
+    !string.IsNullOrWhiteSpace(connectionStringBuilder.Host) &&
+    connectionStringBuilder.Host.EndsWith(".pooler.supabase.com", StringComparison.OrdinalIgnoreCase))
+{
+    // Supabase already fronts the database with its own pooler. Disabling the
+    // client-side Npgsql pool avoids a driver/pooler reuse bug seen on
+    // back-to-back commands against the pooler endpoint.
+    connectionStringBuilder.Pooling = false;
+}
+
+var connectionString = connectionStringBuilder.ConnectionString;
 
 // Add services to the container.
 builder.Services.AddControllers();

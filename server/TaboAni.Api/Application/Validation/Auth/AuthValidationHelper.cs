@@ -5,19 +5,19 @@ namespace TaboAni.Api.Application.Validation.Auth;
 
 internal static class AuthValidationHelper
 {
+    private const string BuyerRoleCode = "BUYER";
+    private const string FarmerRoleCode = "FARMER";
+
     public static ValidatedSignupRequest ValidateSignupRequest(SignupRequestDto signupRequestDto)
     {
         ArgumentNullException.ThrowIfNull(signupRequestDto);
 
         var email = NormalizeEmail(signupRequestDto.Email);
         var mobileNumber = NormalizeMobileNumber(signupRequestDto.MobileNumber);
-        var firstName = RequireValue(signupRequestDto.FirstName, "First name is required.");
-        var lastName = RequireValue(signupRequestDto.LastName, "Last name is required.");
-        var roleCode = RequireValue(signupRequestDto.RoleCode, "Role code is required.").ToUpperInvariant();
-        var businessName = RequireValue(signupRequestDto.BusinessName, "Business name is required.");
-        var locationText = RequireValue(signupRequestDto.LocationText, "Location is required.");
         var password = RequireValue(signupRequestDto.Password, "Password is required.");
         var confirmPassword = RequireValue(signupRequestDto.ConfirmPassword, "Confirm password is required.");
+        var firstName = RequireValue(signupRequestDto.FirstName, "First name is required.");
+        var lastName = RequireValue(signupRequestDto.LastName, "Last name is required.");
         var displayName = NormalizeOptional(signupRequestDto.DisplayName);
 
         if (password.Length < 8)
@@ -30,6 +30,31 @@ internal static class AuthValidationHelper
             throw new ArgumentException("Password and confirm password must match.", nameof(signupRequestDto));
         }
 
+        var applications = new List<ValidatedRoleApplication>();
+
+        if (signupRequestDto.BuyerApplication is not null)
+        {
+            applications.Add(new ValidatedRoleApplication(
+                BuyerRoleCode,
+                RequireValue(signupRequestDto.BuyerApplication.BusinessName, "Buyer business name is required."),
+                RequireValue(signupRequestDto.BuyerApplication.LocationText, "Buyer location is required."),
+                RequireValue(signupRequestDto.BuyerApplication.BusinessType, "Buyer business type is required.")));
+        }
+
+        if (signupRequestDto.FarmerApplication is not null)
+        {
+            applications.Add(new ValidatedRoleApplication(
+                FarmerRoleCode,
+                RequireValue(signupRequestDto.FarmerApplication.FarmName, "Farm name is required."),
+                RequireValue(signupRequestDto.FarmerApplication.LocationText, "Farm location is required."),
+                null));
+        }
+
+        if (applications.Count == 0)
+        {
+            throw new ArgumentException("At least one role application is required.", nameof(signupRequestDto));
+        }
+
         return new ValidatedSignupRequest(
             email,
             mobileNumber,
@@ -37,9 +62,17 @@ internal static class AuthValidationHelper
             firstName,
             lastName,
             displayName,
-            roleCode,
-            businessName,
-            locationText);
+            applications);
+    }
+
+    public static string ValidateEmailAddress(string email)
+    {
+        return NormalizeEmail(email);
+    }
+
+    public static string ValidateVerificationToken(string token)
+    {
+        return RequireValue(token, "Verification token is required.");
     }
 
     private static string NormalizeEmail(string email)
@@ -105,6 +138,10 @@ internal sealed record ValidatedSignupRequest(
     string FirstName,
     string LastName,
     string? DisplayName,
+    IReadOnlyList<ValidatedRoleApplication> RoleApplications);
+
+internal sealed record ValidatedRoleApplication(
     string RoleCode,
-    string BusinessName,
-    string LocationText);
+    string Name,
+    string LocationText,
+    string? BusinessType);
