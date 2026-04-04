@@ -13,11 +13,15 @@ internal sealed class EmailVerificationTokenConfiguration : IEntityTypeConfigura
         builder.ConfigureRequiredText(x => x.TokenHash);
         builder.ConfigureTimestamp(x => x.ExpiresAt);
         builder.ConfigureOptionalTimestamp(x => x.ConsumedAt);
+        builder.ConfigureOptionalTimestamp(x => x.InvalidatedAt);
         builder.ConfigureCreatedAt(x => x.CreatedAt);
-        builder.HasIndex(x => new { x.UserId, x.TokenHash })
-            .HasDatabaseName("ix_email_verification_tokens_user_id_token_hash");
+        builder.HasIndex(x => x.TokenHash)
+            .IsUnique()
+            .HasDatabaseName("ux_email_verification_tokens_token_hash");
         builder.HasIndex(x => new { x.UserId, x.ExpiresAt })
             .HasDatabaseName("ix_email_verification_tokens_user_id_expires_at");
+        builder.HasIndex(x => new { x.UserId, x.CreatedAt })
+            .HasDatabaseName("ix_email_verification_tokens_user_id_created_at");
         builder.HasOne<User>()
             .WithMany()
             .HasForeignKey(x => x.UserId)
