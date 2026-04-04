@@ -1,63 +1,55 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
-import type { SignupStepComponentProps } from "../../../types/signup.types";
+import type { RoleCode, SignupStepComponentProps } from "../../../types/signup.types";
 
-type SignupRole = {
-  value: string;
+type SignupRoleOption = {
+  value: RoleCode;
   label: string;
   description: string;
   icon: string;
 };
 
-const SIGNUP_ROLES: SignupRole[] = [
+const SIGNUP_ROLES: SignupRoleOption[] = [
   {
-    value: "farmer",
-    label: "Farmer",
-    description: "Cultivate and sell fresh produce directly to the market.",
-    icon: "agriculture",
-  },
-  {
-    value: "distributor",
-    label: "Distributor",
-    description: "Manage logistics and bridge the gap between farm and retail.",
-    icon: "local_shipping",
-  },
-  {
-    value: "buyer",
+    value: "BUYER",
     label: "Buyer",
-    description: "Purchase high-quality bulk agricultural products.",
+    description: "Purchase fresh produce for restaurants, resellers, or food operations.",
     icon: "shopping_cart",
   },
   {
-    value: "retailer",
-    label: "Retailer",
-    description: "Sell directly to local consumers and households.",
-    icon: "storefront",
+    value: "FARMER",
+    label: "Farmer",
+    description: "Register your farm and prepare your products for marketplace participation.",
+    icon: "agriculture",
   },
 ];
 
 export function SignupStep2ProfileDetails({
   step,
+  form,
+  errors,
   onContinue,
   onBack,
+  onToggleRole,
 }: SignupStepComponentProps) {
-  const [selectedRole, setSelectedRole] = useState("farmer");
-
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onContinue();
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <form className="space-y-6 sm:space-y-8" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {SIGNUP_ROLES.map((role) => {
-          const isActive = selectedRole === role.value;
+          const isActive =
+            role.value === "BUYER"
+              ? form.buyerApplication.isSelected
+              : form.farmerApplication.isSelected;
+
           return (
             <button
               key={role.value}
               type="button"
-              onClick={() => setSelectedRole(role.value)}
+              onClick={() => onToggleRole(role.value)}
               className={`group cursor-pointer rounded-2xl p-4 text-left transition-all sm:p-5 ${
                 isActive
                   ? "border-2 border-agri-earth bg-white ring-1 ring-agri-earth shadow-lg shadow-agri-leaf/10"
@@ -91,102 +83,36 @@ export function SignupStep2ProfileDetails({
         })}
       </div>
 
-      <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
-        <div>
-          <label
-            htmlFor="signup-business-name"
-            className="mb-2 block text-sm font-semibold text-slate-700"
-          >
-            Business or Farm Name
-          </label>
-          <input
-            id="signup-business-name"
-            type="text"
-            placeholder="e.g. Green Valley Farm"
-            className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:px-5 sm:py-3"
-          />
-        </div>
+      {errors.roles ? <p className="text-sm text-red-600">{errors.roles}</p> : null}
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div>
-            <label
-              htmlFor="signup-region"
-              className="mb-2 block text-sm font-semibold text-slate-700"
-            >
-              Region
-            </label>
-            <select
-              id="signup-region"
-              defaultValue=""
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:py-3"
-            >
-              <option value="" disabled>
-                Select Region
-              </option>
-              <option>Region I</option>
-              <option>Region II</option>
-              <option>Region III</option>
-            </select>
-          </div>
+      <div className="rounded-2xl border border-slate-100 bg-agri-light p-5 text-sm text-slate-600">
+        <p className="font-semibold text-slate-800">Role application policy</p>
+        <p className="mt-2">
+          Selected roles will be submitted as pending applications. You can apply for
+          both BUYER and FARMER under the same account.
+        </p>
+      </div>
 
-          <div>
-            <label
-              htmlFor="signup-province"
-              className="mb-2 block text-sm font-semibold text-slate-700"
-            >
-              Province
-            </label>
-            <select
-              id="signup-province"
-              defaultValue=""
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:py-3"
-            >
-              <option value="" disabled>
-                Select Province
-              </option>
-            </select>
-          </div>
+      <div className="space-y-4 pt-4 sm:pt-6">
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-agri-accent py-3.5 text-sm font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.01] hover:bg-agri-accent/90 active:scale-[0.99] sm:py-4 sm:text-base"
+        >
+          {step.ctaLabel}
+          <span className="material-symbols-outlined text-xl">arrow_forward</span>
+        </button>
 
-          <div>
-            <label
-              htmlFor="signup-city"
-              className="mb-2 block text-sm font-semibold text-slate-700"
-            >
-              City/Municipality
-            </label>
-            <select
-              id="signup-city"
-              defaultValue=""
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-agri-leaf sm:py-3"
-            >
-              <option value="" disabled>
-                Select City
-              </option>
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-4 pt-4 sm:pt-6">
+        <div className="text-center">
           <button
-            type="submit"
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-agri-accent py-3.5 text-sm font-bold text-white shadow-lg shadow-agri-accent/20 transition-all hover:scale-[1.01] hover:bg-agri-accent/90 active:scale-[0.99] sm:py-4 sm:text-base"
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-slate-500 transition-colors hover:text-agri-leaf"
           >
-            {step.ctaLabel}
-            <span className="material-symbols-outlined text-xl">arrow_forward</span>
+            <span className="material-symbols-outlined text-lg">arrow_back</span>
+            Back
           </button>
-
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-slate-500 transition-colors hover:text-agri-leaf"
-            >
-              <span className="material-symbols-outlined text-lg">arrow_back</span>
-              Back
-            </button>
-          </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }

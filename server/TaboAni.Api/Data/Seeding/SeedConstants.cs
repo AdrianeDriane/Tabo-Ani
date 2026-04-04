@@ -2,6 +2,11 @@ namespace TaboAni.Api.Data.Seeding;
 
 internal static class SeedConstants
 {
+    internal static readonly Guid AdminRoleId = Guid.Parse("7d14a456-2f85-4dbd-b0a6-55a7cce4d882");
+    internal static readonly Guid FarmerRoleId = Guid.Parse("e1a7d1a5-7432-4a4c-99a0-a2bc6f1d83ef");
+    internal static readonly Guid BuyerRoleId = Guid.Parse("51d9b795-2c9f-4ee6-961c-3b63589749f2");
+    internal static readonly Guid DistributorRoleId = Guid.Parse("d6fb43ba-c0f8-4f1c-b1c1-035f88cb78a7");
+
     internal static readonly Guid PrimaryFarmerUserId = Guid.Parse("2f7f0c6c-16df-4e0f-b28f-d7057f1a9d11");
     internal static readonly Guid PrimaryFarmerProfileId = Guid.Parse("dbb5e97a-df97-4916-8739-5c51f50dc7d8");
     internal static readonly Guid SecondaryFarmerUserId = Guid.Parse("f4d7f881-60ec-4c2d-b6cd-3e531f69500d");
