@@ -4,12 +4,18 @@ using TaboAni.Api.Data;
 
 namespace TaboAni.Api.Infrastructure.Implementations;
 
-public sealed class UnitOfWork(AppDbContext context, IOrderRepository orderRepository) : IUnitOfWork, IAsyncDisposable
+public sealed class UnitOfWork(
+    AppDbContext context,
+    IOrderRepository orderRepository,
+    IMarketplaceRepository marketplaceRepository,
+    ICartRepository cartRepository) : IUnitOfWork, IAsyncDisposable
 {
     private readonly AppDbContext _context = context;
     private IDbContextTransaction? _currentTransaction;
 
     public IOrderRepository Orders { get; } = orderRepository;
+    public IMarketplaceRepository Marketplace { get; } = marketplaceRepository;
+    public ICartRepository Cart { get; } = cartRepository;
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
     {

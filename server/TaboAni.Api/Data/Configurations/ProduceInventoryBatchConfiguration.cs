@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TaboAni.Api.Domain.Entities;
+using TaboAni.Api.Domain.Enums;
 
 namespace TaboAni.Api.Data.Configurations;
 
@@ -15,7 +16,12 @@ internal sealed class ProduceInventoryBatchConfiguration : IEntityTypeConfigurat
         builder.ConfigureOptionalDate(x => x.ActualHarvestDate);
         builder.ConfigureDecimal(x => x.AvailableQuantityKg, 12, 3);
         builder.ConfigureDecimal(x => x.ReservedQuantityKg, 12, 3).HasDefaultValue(0.000m);
-        builder.ConfigureRequiredText(x => x.InventoryStatus);
+        builder.Property(x => x.InventoryStatus)
+            .HasConversion(
+                inventoryStatus => inventoryStatus.ToString().ToUpperInvariant(),
+                inventoryStatus => Enum.Parse<InventoryStatus>(inventoryStatus, true))
+            .HasColumnType("text")
+            .IsRequired();
         builder.ConfigureOptionalText(x => x.Notes);
         builder.ConfigureCreatedAt(x => x.CreatedAt);
         builder.ConfigureUpdatedAt(x => x.UpdatedAt);
@@ -29,4 +35,3 @@ internal sealed class ProduceInventoryBatchConfiguration : IEntityTypeConfigurat
             .OnDelete(DeleteBehavior.Restrict);
     }
 }
-

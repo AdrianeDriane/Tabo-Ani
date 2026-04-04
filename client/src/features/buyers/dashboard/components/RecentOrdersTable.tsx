@@ -2,6 +2,7 @@ import type { RecentOrder } from "../types/buyerDashboard.types";
 
 type RecentOrdersTableProps = {
   orders: RecentOrder[];
+  onQuickReorder?: (orderId: string) => void;
 };
 
 const statusStyles: Record<RecentOrder["status"], string> = {
@@ -9,7 +10,10 @@ const statusStyles: Record<RecentOrder["status"], string> = {
   DELIVERED: "bg-agri-leaf/10 text-agri-leaf",
 };
 
-export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
+export default function RecentOrdersTable({
+  orders,
+  onQuickReorder,
+}: RecentOrdersTableProps) {
   return (
     <section data-purpose="recent-orders-table">
       <div className="flex items-center justify-between mb-6">
@@ -63,7 +67,11 @@ export default function RecentOrdersTable({ orders }: RecentOrdersTableProps) {
                     </span>
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <button className="px-4 py-2 bg-agri-light text-agri-green rounded-xl text-xs font-bold border border-agri-green/10 hover:bg-agri-green hover:text-white transition-all">
+                    <button
+                      className="px-4 py-2 bg-agri-light text-agri-green rounded-xl text-xs font-bold border border-agri-green/10 hover:bg-agri-green hover:text-white transition-all"
+                      type="button"
+                      onClick={() => onQuickReorder?.(order.id)}
+                    >
                       Quick Reorder
                     </button>
                   </td>
