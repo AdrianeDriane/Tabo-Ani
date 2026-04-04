@@ -1,6 +1,6 @@
 ---
 name: backend-feature
-description: Implement or modify ASP.NET Core Web API backend functionality.
+description: Use when the task requires implementing or modifying ASP.NET Core Web API backend functionality in `server/TaboAni.Api/`. This includes creating or updating API routes, controllers, services, DTOs, models, or database interactions. Follow existing backend architecture patterns and ensure consistency with current conventions.
 ---
 
 # Purpose
@@ -13,6 +13,14 @@ This includes:
 - new controllers/services
 - modifying existing backend logic
 - updating request/response behavior
+
+Do not use this skill for:
+
+- frontend-only changes
+- architectural discussion without implementation
+- prompt structuring
+- git commit planning
+- general Q&A
 
 # Workflow
 
