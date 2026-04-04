@@ -13,6 +13,7 @@ if (args.Contains("--verify-schema", StringComparer.Ordinal))
 }
 
 var shouldSeedFarmerData = args.Contains("--seed-farmer-data", StringComparer.Ordinal);
+var shouldSeedPlatformRoles = args.Contains("--seed-platform-roles", StringComparer.Ordinal);
 
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
@@ -45,6 +46,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+if (shouldSeedPlatformRoles)
+{
+    // Short-circuit the host for one-off platform role seeding.
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    await RoleSeeder.SeedAsync(dbContext);
+    return;
+}
+
 if (shouldSeedFarmerData)
 {
     // Short-circuit the host for one-off local data seeding.
@@ -66,3 +77,7 @@ app.UseCors("Frontend");
 app.MapControllers();
 
 app.Run();
+
+public partial class Program
+{
+}
