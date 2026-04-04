@@ -9,4 +9,5 @@ public sealed record MarketplaceListingsQueryRequestDto(
     int Page = 1,
     int PageSize = 20,
     string? Sort = null,
-    string? ListingStatus = null);
+    string? ListingStatus = null,
+    Guid? ExcludeFarmerProfileId = null);

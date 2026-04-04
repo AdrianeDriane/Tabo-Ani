@@ -73,6 +73,11 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
             listingQuery = listingQuery.Where(listing => listing.PricePerKg <= query.MaxPrice.Value);
         }
 
+        if (query.ExcludeFarmerProfileId.HasValue)
+        {
+            listingQuery = listingQuery.Where(listing => listing.FarmerProfileId != query.ExcludeFarmerProfileId.Value);
+        }
+
         return await GetMarketplaceListingPageAsync(listingQuery, query.Page, query.PageSize, query.Sort, cancellationToken);
     }
 

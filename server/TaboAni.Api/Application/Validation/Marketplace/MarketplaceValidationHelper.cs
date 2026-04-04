@@ -191,6 +191,11 @@ internal static class MarketplaceValidationHelper
             throw new InvalidListingQueryException("MaxPrice must be greater than or equal to MinPrice.");
         }
 
+        if (query.ExcludeFarmerProfileId.HasValue && query.ExcludeFarmerProfileId.Value == Guid.Empty)
+        {
+            throw new InvalidListingQueryException("ExcludeFarmerProfileId cannot be an empty GUID.");
+        }
+
         var normalizedStatus = allowListingStatusFilter && !string.IsNullOrWhiteSpace(query.ListingStatus)
             ? ToListingStatusWireValue(ParseListingStatusOrThrow(query.ListingStatus))
             : null;
