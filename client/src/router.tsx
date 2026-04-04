@@ -6,6 +6,7 @@ import { FarmerProfilePage } from "./pages/FarmerProfilePage";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/auth/Login";
 import { SignUp } from "./pages/auth/SignUp";
+import { VerifyEmail } from "./pages/auth/VerifyEmail";
 import Assistant from "./pages/assistant/Assistant";
 import BuyersDashboard from "./pages/buyers/Dashboard";
 import BuyersMarketplace from "./pages/buyers/Marketplace";
@@ -37,6 +38,10 @@ export const router = createBrowserRouter([
       {
         path: "login",
         Component: Login,
+      },
+      {
+        path: "verify-email",
+        Component: VerifyEmail,
       },
       {
         path: "admin",

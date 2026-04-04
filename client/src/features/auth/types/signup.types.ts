@@ -68,7 +68,6 @@ export type SignupFormState = {
   farmerApplication: FarmerApplicationFormState;
   hasAcceptedTerms: boolean;
   hasAcceptedPrivacy: boolean;
-  verificationToken: string;
 };
 
 export type SignupFormErrors = Partial<Record<string, string>>;
@@ -89,19 +88,21 @@ export type SignupResponse = {
   isEmailVerified: boolean;
   accountStatus: string;
   requestedRoles: SignupRoleApplicationResponse[];
-  emailVerificationTokenPreview: string | null;
+};
+
+export type ResendEmailVerificationResponse = {
+  status: "ACCEPTED";
 };
 
 export type EmailVerificationStatusResponse = {
+  status: "VERIFIED" | "ALREADY_VERIFIED" | "INVALID_OR_EXPIRED";
   userId: string;
   email: string;
   isEmailVerified: boolean;
   verifiedAt: string | null;
-  emailVerificationTokenPreview: string | null;
 };
 
 export type VerifyEmailRequest = {
-  email: string;
   token: string;
 };
 
@@ -113,8 +114,8 @@ export type SignupStepComponentProps = {
   isVerificationSubmitting: boolean;
   submitError: string | null;
   verificationError: string | null;
+  verificationNotice: string | null;
   signupResponse: SignupResponse | null;
-  emailVerificationStatus: EmailVerificationStatusResponse | null;
   onContinue: () => void;
   onBack: () => void;
   onAccountFieldChange: (
@@ -128,11 +129,9 @@ export type SignupStepComponentProps = {
   ) => void;
   onFarmerFieldChange: (
     field: "farmName" | "region" | "province" | "city",
-    value: string,
+      value: string,
   ) => void;
   onAgreementChange: (field: "hasAcceptedTerms" | "hasAcceptedPrivacy", checked: boolean) => void;
-  onVerificationTokenChange: (value: string) => void;
   onSubmitSignup: () => void;
-  onVerifyEmail: () => void;
   onResendVerification: () => void;
 };

@@ -1,9 +1,14 @@
 import type {
   EmailVerificationStatusResponse,
+  ResendEmailVerificationResponse,
   SignupFormState,
   SignupResponse,
   VerifyEmailRequest,
 } from "../types/signup.types";
+import {
+  CURRENT_PRIVACY_VERSION,
+  CURRENT_TERMS_VERSION,
+} from "../constants/authPolicies";
 import { API_BASE_URL } from "../../../api/config";
 
 type ApiResponse<T> = {
@@ -26,6 +31,10 @@ type SignupRequestPayload = {
   firstName: string;
   lastName: string;
   displayName: string | null;
+  hasAcceptedTerms: boolean;
+  termsVersion: string;
+  hasAcceptedPrivacy: boolean;
+  privacyVersion: string;
   buyerApplication: {
     businessName: string;
     businessType: string;
@@ -45,8 +54,8 @@ export async function signup(
 
 export async function resendVerification(
   email: string
-): Promise<ApiResponse<EmailVerificationStatusResponse>> {
-  return postJson<ApiResponse<EmailVerificationStatusResponse>>(
+): Promise<ApiResponse<ResendEmailVerificationResponse>> {
+  return postJson<ApiResponse<ResendEmailVerificationResponse>>(
     "/api/v1/auth/verify-email/resend",
     {
       email,
@@ -76,6 +85,10 @@ export function buildSignupPayload(
     firstName: form.firstName.trim(),
     lastName: form.lastName.trim(),
     displayName: form.displayName.trim() ? form.displayName.trim() : null,
+    hasAcceptedTerms: form.hasAcceptedTerms,
+    termsVersion: CURRENT_TERMS_VERSION,
+    hasAcceptedPrivacy: form.hasAcceptedPrivacy,
+    privacyVersion: CURRENT_PRIVACY_VERSION,
     buyerApplication: form.buyerApplication.isSelected
       ? {
           businessName: form.buyerApplication.businessName.trim(),

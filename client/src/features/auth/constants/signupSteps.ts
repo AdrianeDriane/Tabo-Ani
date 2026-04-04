@@ -79,7 +79,8 @@ export const SIGNUP_STEPS: SignupStep[] = [
     id: 4,
     title: "Review And Verify",
     ctaLabel: "Create My Account",
-    helperText: "Review your application, accept the policies, and verify your email after signup.",
+    helperText:
+      "Review your application, accept the policies, and finish account creation. We will email your verification link immediately after signup.",
     contentContainerClassName: "max-w-xl",
     brandPanel: {
       logoIcon: "agriculture",
