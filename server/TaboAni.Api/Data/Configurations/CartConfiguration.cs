@@ -17,7 +17,7 @@ internal sealed class CartConfiguration : IEntityTypeConfiguration<Cart>
                 cartStatus => Enum.Parse<CartStatus>(cartStatus, true))
             .HasColumnType("text")
             .IsRequired()
-            .HasDefaultValue(CartStatus.Active.ToString().ToUpperInvariant());
+            .HasDefaultValue(CartStatus.Active);
         builder.ConfigureCreatedAt(x => x.CreatedAt);
         builder.ConfigureUpdatedAt(x => x.UpdatedAt);
         builder.HasOne<User>()
