@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { API_BASE_URL } from "../api/config";
 
 type ProduceListing = {
   id: number;
@@ -9,8 +10,6 @@ type ProduceListing = {
   pricePerKg: number;
   createdAtUtc: string;
 };
-
-const API_BASE_URL = "https://localhost:7225";
 
 async function getListings(): Promise<ProduceListing[]> {
   const res = await fetch(`${API_BASE_URL}/api/ProduceListings`);

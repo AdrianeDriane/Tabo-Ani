@@ -3,8 +3,8 @@ import type { SignupStep } from "../types/signup.types";
 export const SIGNUP_STEPS: SignupStep[] = [
   {
     id: 1,
-    title: "Account Credentials",
-    ctaLabel: "Continue to Profile Details",
+    title: "Create Your Account",
+    ctaLabel: "Continue to Role Selection",
     contentContainerClassName: "max-w-md",
     brandPanel: {
       logoIcon: "agriculture",
@@ -26,9 +26,9 @@ export const SIGNUP_STEPS: SignupStep[] = [
   },
   {
     id: 2,
-    title: "Tell us about yourself",
-    ctaLabel: "Continue to KYC Verification",
-    helperText: "Select your role to help us tailor your experience.",
+    title: "Choose Your Roles",
+    ctaLabel: "Continue to Role Details",
+    helperText: "You can apply for BUYER, FARMER, or both in one account.",
     contentContainerClassName: "max-w-xl",
     brandPanel: {
       logoIcon: "eco",
@@ -47,10 +47,10 @@ export const SIGNUP_STEPS: SignupStep[] = [
   },
   {
     id: 3,
-    title: "Official Identity Verification",
+    title: "Role Application Details",
     ctaLabel: "Continue to Review",
     helperText:
-      "Your security is paramount. We require identity verification for all partners to maintain a trusted and compliant platform.",
+      "Complete the profile details required for each role you selected. KYC documents will be collected after account creation.",
     contentContainerClassName: "max-w-xl",
     brandPanel: {
       logoIcon: "eco",
@@ -66,9 +66,9 @@ export const SIGNUP_STEPS: SignupStep[] = [
       ],
       testimonial: {
         quote:
-          "Verification was seamless. Within hours, I was able to list my first harvest and find buyers from Manila.",
+          "Setting up my account was simple, and I could start the verification steps right after confirming my email.",
         name: "Ricardo Santos",
-        role: "Benguet Vegetable Producer",
+        role: "Benguet Farmer",
         avatarUrl:
           "https://lh3.googleusercontent.com/aida-public/AB6AXuDV_TUMeg4YUd0VK4AKYxBcOFW4GibLQNjxuSOpmlTO_TtdLTHzkM0TOOFGn0agjdD3bdQqoXFfHcTsuvDbA7k3UPR4vyQr-f1Kzir79kcziKMq7BUc8HLFfePU4lVO2aW3Yl7ewCX-g0m3NTdf49ciVJfffRmhtBYDs9ugibQkEuH5pGt4qG7t47nE3GvhGAs8Fg4pTkRDbQnX_0GcK0mdpIW3ZGKTfDtQpfbGpbe_X7IYA6BW7YBUg9VJ1TO96NrX3FCYJ4cqknws",
       },
@@ -77,9 +77,9 @@ export const SIGNUP_STEPS: SignupStep[] = [
   },
   {
     id: 4,
-    title: "Confirm Your Tabo-Ani Account",
-    ctaLabel: "Activate My Account",
-    helperText: "One last review before you activate your powerful new account.",
+    title: "Review And Verify",
+    ctaLabel: "Create My Account",
+    helperText: "Review your application, accept the policies, and verify your email after signup.",
     contentContainerClassName: "max-w-xl",
     brandPanel: {
       logoIcon: "agriculture",
