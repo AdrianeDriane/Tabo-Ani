@@ -50,9 +50,9 @@ builder.Services.AddApplicationDependencies();
 builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
 builder.Services.Configure<EmailVerificationOptions>(builder.Configuration.GetSection(EmailVerificationOptions.SectionName));
 builder.Services.Configure<SignupPolicyOptions>(builder.Configuration.GetSection(SignupPolicyOptions.SectionName));
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
-
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -92,6 +92,7 @@ builder.Services.AddRateLimiter(options =>
             TimeSpan.FromMinutes(authRateLimitOptions.VerifyWindowMinutes),
             authRateLimitOptions.QueueLimit));
 });
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -134,13 +135,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
-app.UseCors("Frontend");
 app.UseRateLimiter();
+app.UseCors("Frontend");
 app.MapControllers();
 
 app.Run();
 
-public partial class Program
 static string[] ResolveAllowedOrigins(FrontendOptions frontendOptions)
 {
     var allowedOrigins = frontendOptions.AllowedOrigins
@@ -178,5 +178,6 @@ static RateLimitPartition<string> CreateAuthRateLimitPartition(
         });
 }
 
+public partial class Program
 {
 }
