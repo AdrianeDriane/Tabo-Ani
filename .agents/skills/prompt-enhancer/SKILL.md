@@ -1,58 +1,144 @@
 ---
 name: prompt-enhancer
-description: Use when the user wants to improve a prompt so it becomes clearer, more precise, and more actionable for an AI model, while preserving intent and natural flow.
+description: Use when the user wants to transform a rough, vague, or unstructured prompt into a high-quality, production-grade instruction for an AI agent. Focuses on clarity, structure, completeness, and intent sharpening without changing the original goal.
 user-invocable: true
 ---
 
 # Purpose
 
-This skill enhances a user-provided prompt by making it clearer, more precise, and more actionable for an AI model.
+This skill upgrades a user-provided prompt into a clear, well-structured, and high-signal instruction that an AI agent can execute with high accuracy.
 
-It improves how the task is communicated, not just how it is worded.
+It does NOT just rephrase — it **reconstructs the prompt** to:
 
-# Behavior
+- eliminate ambiguity
+- surface implicit requirements
+- organize context logically
+- clarify expectations and constraints
+
+The goal is to make the prompt feel like it was written by an experienced engineer giving precise instructions to another engineer.
+
+---
+
+# Core Behavior
 
 When invoked:
 
-1. Read the user's prompt carefully.
-2. Rewrite it to:
-   - clarify the actual task
-   - make instructions more direct and actionable
-   - remove vague or uncertain phrasing (e.g., "I think", "maybe")
-   - make the expected output more explicit
-   - improve flow and readability
-3. Preserve the original intent and scope exactly.
-4. Lightly organize the prompt for clarity, but keep it natural (no rigid templates).
+1. Deeply understand the intent behind the prompt
+   - Identify the actual task (not just the wording)
+   - Detect implicit requirements and constraints
 
-# Enhancement Principles
+2. Reconstruct the prompt to improve:
+   - clarity of the problem
+   - structure of information
+   - flow of instructions
+   - completeness of context
+   - explicitness of expected output
 
-- Convert vague intentions into clear instructions.
-- Make the task explicit (what needs to be checked, compared, built, or modified).
-- Clarify what the AI should produce as output.
-- Keep the tone natural and developer-like, not robotic.
-- Prefer clarity and precision over politeness or filler wording.
+3. Organize the prompt using **natural structure**
+   - NOT rigid templates
+   - BUT may introduce sections when it improves clarity
+
+4. Preserve:
+   - original intent
+   - original scope
+   - all important details
+
+---
+
+# Enhancement Strategy
+
+## 1. Clarify the Task
+
+- Convert vague phrasing into precise instructions
+- Make the objective unmistakably clear
+- Remove uncertainty (e.g., "I think", "maybe")
+
+## 2. Surface Context Properly
+
+- Separate background vs actual task
+- Highlight important system constraints
+- Make hidden assumptions explicit when already implied
+
+## 3. Improve Instruction Quality
+
+- Turn passive descriptions into actionable directives
+- Ensure each requirement is understandable and usable
+- Group related requirements logically
+
+## 4. Define Expected Output
+
+- Clarify what the AI should produce
+- Make success criteria obvious
+- Avoid leaving interpretation gaps
+
+## 5. Improve Flow & Readability
+
+- Make it feel like a clean engineering brief
+- Avoid unnecessary verbosity
+- Keep it sharp, structured, and readable
+
+---
+
+# Adaptive Structuring (Important)
+
+You MAY introduce structure such as:
+
+- context / background
+- task definition
+- scope
+- constraints
+- requirements
+- edge considerations
+- expected behavior
+
+BUT:
+
+- Do NOT force a fixed format
+- Do NOT always use the same sections
+- Structure should emerge naturally based on the prompt
+
+---
 
 # Constraints
 
-- Do not ask clarification questions.
-- Do not introduce new requirements or assumptions.
-- Do not remove important details from the original prompt.
-- Do not force rigid structures like "Goal / Context / Constraints".
-- Do not turn the prompt into a checklist unless it naturally improves clarity.
-- Do not perform any coding or planning.
+- Do NOT change the intent or scope
+- Do NOT introduce new features or requirements
+- Do NOT remove critical details
+- Do NOT ask clarification questions
+- Do NOT perform the task itself
+- Do NOT turn everything into rigid bullet checklists unless it improves clarity
+- Do NOT oversimplify complex prompts
+
+---
 
 # Output Rules
 
-- Output only the enhanced prompt.
-- No explanations, no commentary.
-- Keep it concise but more precise than the original.
-- Ensure the result is immediately usable as an AI instruction.
+- Output ONLY the enhanced prompt
+- No explanations, no commentary
+- Keep it concise but significantly clearer and stronger
+- Ensure it is immediately usable as an AI instruction
+
+---
 
 # Quality Standard
 
-A good result should:
+A high-quality output should:
 
-- feel like a more "professional" version of the original prompt
-- be more actionable and less ambiguous
-- clearly communicate what needs to be done and what the expected output is
-- avoid sounding like a paraphrase — it should feel like an upgrade
+- feel like a **senior engineer’s instruction**, not a paraphrase
+- be **clear, structured, and complete**
+- remove ambiguity and guesswork
+- make execution straightforward for an AI agent
+- balance **structure + natural flow**
+- be something you would confidently use in production prompting
+
+---
+
+# Anti-Pattern (What NOT to Do)
+
+Avoid outputs that:
+
+- only reword sentences
+- just make tone more "confident"
+- lack structure or clarity improvements
+- feel like a shallow paraphrase
+- ignore deeper intent or system context
