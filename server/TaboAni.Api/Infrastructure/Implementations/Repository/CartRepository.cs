@@ -18,6 +18,16 @@ public sealed class CartRepository(AppDbContext context) : ICartRepository
             .AnyAsync(user => user.UserId == userId, cancellationToken);
     }
 
+    public Task<bool> IsFarmerProfileOwnedByUserAsync(
+        Guid farmerProfileId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.FarmerProfiles
+            .AsNoTracking()
+            .AnyAsync(profile => profile.FarmerProfileId == farmerProfileId && profile.UserId == userId, cancellationToken);
+    }
+
     public Task<Cart?> GetCartByUserIdForUpdateAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return _context.Carts

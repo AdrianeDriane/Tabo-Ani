@@ -70,6 +70,17 @@ internal sealed class CartServiceGuards(IUnitOfWork unitOfWork)
         return listing;
     }
 
+    public async Task EnsureListingIsNotOwnedByUserAsync(
+        Guid userId,
+        CartListingSnapshotDto listing,
+        CancellationToken cancellationToken)
+    {
+        if (await _unitOfWork.Cart.IsFarmerProfileOwnedByUserAsync(listing.FarmerProfileId, userId, cancellationToken))
+        {
+            throw new InvalidCartException("You cannot add or update your own listing in your cart.");
+        }
+    }
+
     public async Task<ActiveCartQueryResultDto> GetActiveCartQueryOrThrowAsync(Guid userId, CancellationToken cancellationToken)
     {
         return await _unitOfWork.Cart.GetActiveCartAsync(userId, cancellationToken)

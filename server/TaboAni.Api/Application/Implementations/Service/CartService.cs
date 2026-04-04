@@ -45,6 +45,7 @@ public sealed class CartService(IUnitOfWork unitOfWork) : ICartService
         await _guards.EnsureUserExistsAsync(validatedUserId, cancellationToken);
 
         var listing = await _guards.GetActiveListingSnapshotOrThrowAsync(validatedRequest.ProduceListingId, cancellationToken);
+        await _guards.EnsureListingIsNotOwnedByUserAsync(validatedUserId, listing, cancellationToken);
         var (cart, _) = await _guards.GetOrCreateActiveCartForWriteAsync(validatedUserId, cancellationToken);
         var existingCartItem = await _unitOfWork.Cart.GetCartItemByCartIdAndListingIdForUpdateAsync(
             cart.CartId,
@@ -107,6 +108,7 @@ public sealed class CartService(IUnitOfWork unitOfWork) : ICartService
             cancellationToken);
 
         var listing = await _guards.GetActiveListingSnapshotOrThrowAsync(cartItem.ProduceListingId, cancellationToken);
+        await _guards.EnsureListingIsNotOwnedByUserAsync(validatedUserId, listing, cancellationToken);
         CartValidationHelper.EnsureQuantityWithinListingRules(validatedRequest.QuantityKg, listing);
 
         var updatedAt = DateTimeOffset.UtcNow;

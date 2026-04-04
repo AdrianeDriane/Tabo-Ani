@@ -6,6 +6,7 @@ namespace TaboAni.Api.Application.Interfaces.Repository;
 public interface ICartRepository
 {
     Task<bool> UserExistsAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> IsFarmerProfileOwnedByUserAsync(Guid farmerProfileId, Guid userId, CancellationToken cancellationToken = default);
 
     Task<Cart?> GetCartByUserIdForUpdateAsync(Guid userId, CancellationToken cancellationToken = default);
 
