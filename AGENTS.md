@@ -1,4 +1,4 @@
-# Repository Guidelines
+# AGENTS.md
 
 ## Project Structure & Module Organization
 
@@ -9,39 +9,93 @@ This repository is split into two apps:
 
 Do not commit generated output from `client/dist/`, `client/node_modules/`, `server/TaboAni.Api/bin/`, or `server/TaboAni.Api/obj/`.
 
-## Build, Test, and Development Commands
+## Working Style
 
-Frontend commands, run from `client/`:
+- Make minimal, high-confidence changes. Do not introduce large refactors unless explicitly requested.
+- Preserve existing UI/UX unless the task clearly requires changes.
+- Prioritize clarity, maintainability, and consistency with the current codebase over “clever” solutions.
+- Follow existing patterns in both frontend (React + TS) and backend (ASP.NET Core + EF Core) before introducing new approaches.
+- Avoid unnecessary abstractions. Prefer simple, readable implementations that match current project style.
+- When uncertain, inspect surrounding files and reuse existing patterns instead of guessing.
+- Do not assume missing requirements — surface assumptions clearly in the final response.
 
-- `npm install`: install dependencies.
-- `npm run dev`: start the Vite dev server on `http://localhost:5173`.
-- `npm run build`: run TypeScript build checks and produce a production bundle.
-- `npm run lint`: run ESLint across `*.ts` and `*.tsx`.
+## Architecture
 
-Backend commands, run from `server/TaboAni.Api/`:
+### General
 
-- `dotnet restore`: restore NuGet packages.
-- `dotnet run`: start the API on `https://localhost:7225` and `http://localhost:5091`.
-- `dotnet build`: compile the API.
-- `dotnet ef database update`: apply EF Core migrations to the configured PostgreSQL database.
+- Respect the separation between `client/` and `server/`. Do not mix concerns.
+- Prefer incremental, additive changes over rewriting existing logic.
 
-## Coding Style & Naming Conventions
+### Frontend (React + TypeScript + Vite)
 
-Use 2 spaces in frontend files and 4 spaces in C# files. Follow the existing style in each app: React components and types use `PascalCase`, hooks and variables use `camelCase`, and API controllers, models, and DTOs use `PascalCase`.
+- Keep components focused and reusable.
+- Do not introduce global state changes unless necessary.
+- Follow existing state management patterns (Redux or current store setup).
+- Avoid breaking component props/contracts.
+- Keep UI logic separate from data-fetching logic where possible.
+- Maintain TypeScript type safety — do not introduce `any`.
+- Make sure to implement DTOs and interfaces as much as possible
+- Have proper UI toast error handling.
+- Handle consistent success and error json bodies based from backend structure.
 
-Prefer small components, explicit TypeScript types for API payloads, and async EF Core queries. Keep controller routes under `api/[ControllerName]`. Use ESLint in `client/eslint.config.js` before opening a PR.
+### Backend (ASP.NET Core Web API .NET 10)
 
-## Testing Guidelines
+- Keep controllers thin — business logic should not live in controllers.
+- Place data access in appropriate services or data layers (not directly in controllers).
+- Follow existing EF Core usage patterns for queries, relationships, and migrations.
+- Avoid breaking existing API contracts unless explicitly required.
+- Ensure DTOs, models, and database mappings remain consistent.
+- Be careful with LINQ queries — ensure correctness and performance.
+- Avoid n + 1 database concern.
+- Know when to use eager vs lazy loading.
+- Have proper error handling and return consistent success and error json bodies.
+- Follow the existing Unit of Work pattern for coordinating database operations across repositories or services.
+- Keep transaction boundaries explicit and consistent, especially for multi-entity writes.
+- Do not bypass the Unit of Work pattern with scattered direct persistence calls unless the existing project pattern clearly does so.
 
-There are currently no dedicated test projects in the repository. At minimum, run `npm run lint`, `npm run build`, and `dotnet build` before submitting changes. When adding tests, place frontend tests beside the feature or under `client/src/__tests__/`, and add backend tests in a separate `server/tests/` project.
+## Safety
 
-## Commit & Pull Request Guidelines
+- Only modify files directly related to the task.
+- Do not rename, move, or delete files unless explicitly required.
+- Do not introduce breaking changes to APIs, schemas, or frontend contracts without clear instruction.
+- Avoid touching authentication, critical business logic, or database schema unless the task explicitly requires it.
+- Do not introduce new dependencies unless necessary and justified.
+- Prefer reversible changes (easy to rollback via Git).
+- If a change has potential side effects, explicitly call it out.
 
-Git history is not available in this workspace, so use short, imperative commit messages such as `client: add produce listing form validation` or `server: add listing create endpoint`. Keep commits focused on one concern.
+## Validation
 
-Pull requests should include a brief summary, affected areas (`client` or `server`), setup or migration notes, and screenshots for UI changes. If a change affects the database, mention the migration file and required local update command.
+- Ensure logic correctness before focusing on optimization.
+- Validate both success and failure cases where applicable.
+- For backend:
+  - Ensure endpoints handle edge cases (nulls, invalid input, empty results).
+  - Ensure queries return expected data shapes.
+- For frontend:
+  - Ensure UI does not break existing layouts or flows.
+  - Ensure data is correctly rendered and handled.
+- If full validation (build/test/run) cannot be executed, clearly state what was not verified.
+- Prefer predictable, testable behavior over assumptions.
 
-## Security & Configuration Tips
+## Final Response
 
-Keep secrets and connection strings out of source control. Store the PostgreSQL connection string in local configuration, and make sure frontend API URLs match the backend launch settings and CORS policy in `Program.cs`.
+Always include:
 
+1. **Summary of Changes**
+   - What was implemented or modified and why.
+
+2. **Files Changed**
+   - List of files touched with brief description per file.
+
+3. **How It Works**
+   - Brief explanation of the implementation.
+
+4. **Validation**
+   - What was checked or verified.
+   - What still needs manual testing (if any).
+
+5. **Assumptions / Risks**
+   - Any assumptions made due to missing context.
+   - Any potential side effects or edge cases.
+
+Keep explanations concise, practical, and focused on helping the developer quickly verify and move forward.
+Avoid unnecessary verbosity or theoretical explanations.

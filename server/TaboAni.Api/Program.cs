@@ -1,10 +1,23 @@
 using Microsoft.EntityFrameworkCore;
+using TaboAni.Api.ExceptionHandling;
+using TaboAni.Api.Application.Configuration;
+using TaboAni.Api.Application.Extensions;
 using TaboAni.Api.Data;
-using TaboAni.Api.Infrastructure;
+using TaboAni.Api.Data.Seeding;
+using TaboAni.Api.Verification;
+
+if (args.Contains("--verify-schema", StringComparer.Ordinal))
+{
+    Environment.ExitCode = SchemaVerificationRunner.Run();
+    return;
+}
+
+var shouldSeedFarmerData = args.Contains("--seed-farmer-data", StringComparer.Ordinal);
 
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
         "Missing ConnectionStrings:DefaultConnection. Set it in server/TaboAni.Api/.env.");
@@ -12,7 +25,10 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddOpenApi();
+builder.Services.AddApiDocumentation();
+builder.Services.AddApplicationDependencies();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -29,11 +45,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (shouldSeedFarmerData)
 {
-    app.MapOpenApi();
+    // Short-circuit the host for one-off local data seeding.
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    await FarmerDevelopmentSeeder.SeedAsync(dbContext);
+    return;
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.MapApiDocumentation();
+}
+
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
 app.MapControllers();

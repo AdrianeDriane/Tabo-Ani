@@ -8,3 +8,5 @@ obj/
 *.suo
 *.userosscache
 *.sln.docstates
+docs/
+Requests/
