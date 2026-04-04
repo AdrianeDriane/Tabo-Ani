@@ -30,6 +30,23 @@ public interface IMarketplaceService
         Guid listingId,
         CancellationToken cancellationToken = default);
 
+    Task<ListingAllowedVehicleTypesResponseDto> AssignAllowedVehicleTypeAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        AssignListingVehicleTypeRequestDto request,
+        CancellationToken cancellationToken = default);
+
+    Task<ListingAllowedVehicleTypesResponseDto> RemoveAllowedVehicleTypeAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        Guid vehicleTypeId,
+        CancellationToken cancellationToken = default);
+
+    Task<ListingAllowedVehicleTypesResponseDto> GetAllowedVehicleTypesAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        CancellationToken cancellationToken = default);
+
     Task<InventoryBatchResponseDto> CreateInventoryBatchAsync(
         Guid farmerProfileId,
         Guid listingId,

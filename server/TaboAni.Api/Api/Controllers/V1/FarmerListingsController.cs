@@ -3,7 +3,7 @@ using TaboAni.Api.Application.DTOs.Request;
 using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Interfaces.Service;
 
-namespace TaboAni.Api.Controllers;
+namespace TaboAni.Api.Controllers.V1;
 
 [ApiController]
 [Route("api/v1/farmers/{farmerProfileId:guid}/listings")]
@@ -95,6 +95,82 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
             Success = true,
             Message = "Produce listing retrieved successfully.",
             Data = listing
+        });
+    }
+
+    [HttpPost("{listingId:guid}/vehicle-types")]
+    [ProducesResponseType(typeof(ApiResponseDto<ListingAllowedVehicleTypesResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> AssignAllowedVehicleType(
+        Guid farmerProfileId,
+        Guid listingId,
+        [FromBody] AssignListingVehicleTypeRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        var allowedVehicleTypes = await _marketplaceService.AssignAllowedVehicleTypeAsync(
+            farmerProfileId,
+            listingId,
+            request,
+            cancellationToken);
+
+        return Ok(new ApiResponseDto<ListingAllowedVehicleTypesResponseDto>
+        {
+            Success = true,
+            Message = "Allowed vehicle type assigned successfully.",
+            Data = allowedVehicleTypes
+        });
+    }
+
+    [HttpDelete("{listingId:guid}/vehicle-types/{vehicleTypeId:guid}")]
+    [ProducesResponseType(typeof(ApiResponseDto<ListingAllowedVehicleTypesResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RemoveAllowedVehicleType(
+        Guid farmerProfileId,
+        Guid listingId,
+        Guid vehicleTypeId,
+        CancellationToken cancellationToken)
+    {
+        var allowedVehicleTypes = await _marketplaceService.RemoveAllowedVehicleTypeAsync(
+            farmerProfileId,
+            listingId,
+            vehicleTypeId,
+            cancellationToken);
+
+        return Ok(new ApiResponseDto<ListingAllowedVehicleTypesResponseDto>
+        {
+            Success = true,
+            Message = "Allowed vehicle type removed successfully.",
+            Data = allowedVehicleTypes
+        });
+    }
+
+    [HttpGet("{listingId:guid}/vehicle-types")]
+    [ProducesResponseType(typeof(ApiResponseDto<ListingAllowedVehicleTypesResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetAllowedVehicleTypes(
+        Guid farmerProfileId,
+        Guid listingId,
+        CancellationToken cancellationToken)
+    {
+        var allowedVehicleTypes = await _marketplaceService.GetAllowedVehicleTypesAsync(
+            farmerProfileId,
+            listingId,
+            cancellationToken);
+
+        return Ok(new ApiResponseDto<ListingAllowedVehicleTypesResponseDto>
+        {
+            Success = true,
+            Message = "Allowed vehicle types retrieved successfully.",
+            Data = allowedVehicleTypes
         });
     }
 

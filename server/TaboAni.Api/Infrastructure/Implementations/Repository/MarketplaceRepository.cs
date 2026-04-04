@@ -4,7 +4,7 @@ using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Interfaces.Repository;
 using TaboAni.Api.Data;
 using TaboAni.Api.Domain.Entities;
-using TaboAni.Api.Domain.Validation;
+using TaboAni.Api.Domain.Enums;
 
 namespace TaboAni.Api.Infrastructure.Implementations.Repository;
 
@@ -35,11 +35,12 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
 
         if (!includeAllStatuses)
         {
-            listingQuery = listingQuery.Where(listing => listing.ListingStatus == ListingStatusPolicy.Active);
+            listingQuery = listingQuery.Where(listing => listing.ListingStatus == ListingStatus.Active);
         }
         else if (!string.IsNullOrWhiteSpace(query.ListingStatus))
         {
-            listingQuery = listingQuery.Where(listing => listing.ListingStatus == query.ListingStatus);
+            var listingStatusFilter = Enum.Parse<ListingStatus>(query.ListingStatus, true);
+            listingQuery = listingQuery.Where(listing => listing.ListingStatus == listingStatusFilter);
         }
 
         if (!string.IsNullOrWhiteSpace(query.Q))
@@ -94,6 +95,13 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
         return _context.ProduceListings.AddAsync(listing, cancellationToken).AsTask();
     }
 
+    public Task AddListingVehicleTypeAsync(
+        FarmerListingVehicleType listingVehicleType,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.FarmerListingVehicleTypes.AddAsync(listingVehicleType, cancellationToken).AsTask();
+    }
+
     public Task AddInventoryBatchAsync(
         ProduceInventoryBatch inventoryBatch,
         CancellationToken cancellationToken = default)
@@ -106,6 +114,25 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
         CancellationToken cancellationToken = default)
     {
         return _context.ListingPriceHistory.AddAsync(priceHistory, cancellationToken).AsTask();
+    }
+
+    public async Task<bool> RemoveListingVehicleTypeAsync(
+        Guid listingId,
+        Guid vehicleTypeId,
+        CancellationToken cancellationToken = default)
+    {
+        var listingVehicleType = await _context.FarmerListingVehicleTypes
+            .SingleOrDefaultAsync(
+                mapping => mapping.ProduceListingId == listingId && mapping.VehicleTypeId == vehicleTypeId,
+                cancellationToken);
+
+        if (listingVehicleType is null)
+        {
+            return false;
+        }
+
+        _context.FarmerListingVehicleTypes.Remove(listingVehicleType);
+        return true;
     }
 
     public Task<ProduceListing?> GetListingByIdForUpdateAsync(Guid listingId, CancellationToken cancellationToken = default)
@@ -129,6 +156,25 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
             .Where(listing => listing.ProduceListingId == listingId)
             .Select(listing => (Guid?)listing.FarmerProfileId)
             .SingleOrDefaultAsync(cancellationToken);
+    }
+
+    public Task<bool> VehicleTypeExistsAsync(Guid vehicleTypeId, CancellationToken cancellationToken = default)
+    {
+        return _context.VehicleTypes
+            .AsNoTracking()
+            .AnyAsync(vehicleType => vehicleType.VehicleTypeId == vehicleTypeId, cancellationToken);
+    }
+
+    public Task<bool> IsVehicleTypeAllowedForListingAsync(
+        Guid listingId,
+        Guid vehicleTypeId,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.FarmerListingVehicleTypes
+            .AsNoTracking()
+            .AnyAsync(
+                mapping => mapping.ProduceListingId == listingId && mapping.VehicleTypeId == vehicleTypeId,
+                cancellationToken);
     }
 
     public Task<bool> IsInventoryBatchCodeInUseAsync(
@@ -239,6 +285,42 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
             batches);
     }
 
+    public async Task<IReadOnlyList<ListingAllowedVehicleTypeQueryResultDto>?> GetListingAllowedVehicleTypesAsync(
+        Guid farmerProfileId,
+        Guid listingId,
+        CancellationToken cancellationToken = default)
+    {
+        var isOwnedListing = await _context.ProduceListings
+            .AsNoTracking()
+            .AnyAsync(
+                listing => listing.ProduceListingId == listingId && listing.FarmerProfileId == farmerProfileId,
+                cancellationToken);
+
+        if (!isOwnedListing)
+        {
+            return null;
+        }
+
+        var allowedVehicleTypes = await _context.FarmerListingVehicleTypes
+            .AsNoTracking()
+            .Where(mapping => mapping.ProduceListingId == listingId)
+            .Join(
+                _context.VehicleTypes.AsNoTracking(),
+                mapping => mapping.VehicleTypeId,
+                vehicleType => vehicleType.VehicleTypeId,
+                (_, vehicleType) => new ListingAllowedVehicleTypeQueryResultDto(
+                    vehicleType.VehicleTypeId,
+                    vehicleType.VehicleTypeName,
+                    vehicleType.Description,
+                    vehicleType.MaxCapacityKg,
+                    vehicleType.IsActive))
+            .OrderBy(vehicleType => vehicleType.VehicleTypeName)
+            .ThenBy(vehicleType => vehicleType.VehicleTypeId)
+            .ToListAsync(cancellationToken);
+
+        return allowedVehicleTypes;
+    }
+
     public async Task<PagedFarmerProduceListingQueryResultDto> GetFarmerListingsAsync(
         Guid farmerProfileId,
         FarmerOwnListingsQueryRequestDto query,
@@ -258,7 +340,8 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
 
         if (!string.IsNullOrWhiteSpace(query.ListingStatus))
         {
-            listingQuery = listingQuery.Where(listing => listing.ListingStatus == query.ListingStatus);
+            var listingStatusFilter = Enum.Parse<ListingStatus>(query.ListingStatus, true);
+            listingQuery = listingQuery.Where(listing => listing.ListingStatus == listingStatusFilter);
         }
 
         var totalCount = await listingQuery.CountAsync(cancellationToken);
