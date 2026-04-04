@@ -18,6 +18,15 @@ Do not commit generated output from `client/dist/`, `client/node_modules/`, `ser
 - Avoid unnecessary abstractions. Prefer simple, readable implementations that match current project style.
 - When uncertain, inspect surrounding files and reuse existing patterns instead of guessing.
 - Do not assume missing requirements — surface assumptions clearly in the final response.
+- If the task is blocked by missing credentials, dashboard-only values, external service configuration, environment variables, secrets, third-party account access, local machine setup, or any other required manual step, do not invent code-based workarounds just to avoid asking.
+- In those cases, explicitly stop and tell the user exactly what manual action is needed.
+- Prefer the most practical path to completion, even when that means asking the user to retrieve or configure something manually.
+- When requesting manual intervention, be specific:
+  - explain what is needed
+  - explain where to get it
+  - explain why it is needed
+  - give exact step-by-step instructions when helpful
+- Do not replace a required manual setup step with speculative or impractical implementation changes.
 
 ## Architecture
 
@@ -52,6 +61,41 @@ Do not commit generated output from `client/dist/`, `client/node_modules/`, `ser
 - Follow the existing Unit of Work pattern for coordinating database operations across repositories or services.
 - Keep transaction boundaries explicit and consistent, especially for multi-entity writes.
 - Do not bypass the Unit of Work pattern with scattered direct persistence calls unless the existing project pattern clearly does so.
+
+## Manual Intervention Rules
+
+- Recognize when a task cannot be completed correctly without user action.
+- Examples include:
+  - retrieving connection strings, API keys, secrets, or project IDs from dashboards
+  - configuring third-party services
+  - updating local environment variables or machine-specific settings
+  - running commands that require user-owned access, authentication, approvals, or devices
+  - verifying behavior that depends on external systems not available to the agent
+
+- When such a blocker exists:
+  1. Do not guess.
+  2. Do not create workaround code unless the user explicitly asked for an alternative approach.
+  3. Tell the user exactly what needs to be done manually.
+  4. Keep the instructions concrete and minimal.
+  5. Resume implementation only after the required manual dependency is satisfied.
+
+- If partial progress is still possible, complete the safe code changes first, then clearly separate:
+  - what was completed
+  - what still requires manual action from the user
+
+## File Reference Style
+
+- Always reference files using repo-relative paths, not absolute local machine paths.
+- Paths should start from the repository root.
+
+Examples:
+
+- Use: `client/src/features/auth/components/signup/SignupFlow.tsx:258`
+- Use: `server/TaboAni.Api/Application/Implementations/Service/AuthService.cs:101`
+- Do not use: `C:/Users/.../Tabo-Ani/client/src/...`
+
+- If mentioning the repository root is useful for clarity, refer to it as `Tabo-Ani` in prose, but do not prepend `Tabo-Ani/` to every file path unless explicitly needed.
+- Keep file references short, readable, and easy to scan.
 
 ## Safety
 
@@ -103,6 +147,11 @@ When actual code, configuration, or file changes are made, include:
 5. **Assumptions / Risks**
    - Any assumptions made due to missing context.
    - Any potential side effects or edge cases.
+
+6. **Manual Steps Required** (only if applicable)
+   - List any required user actions that the agent could not perform directly.
+   - Provide exact, practical instructions.
+   - Do not hide required manual intervention behind speculative workaround suggestions.
 
 For non-implementation requests such as:
 
