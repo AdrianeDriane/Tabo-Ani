@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.DTOs.Request;
 
 namespace TaboAni.Api.Application.Validation.Auth;
@@ -8,9 +9,12 @@ internal static class AuthValidationHelper
     private const string BuyerRoleCode = "BUYER";
     private const string FarmerRoleCode = "FARMER";
 
-    public static ValidatedSignupRequest ValidateSignupRequest(SignupRequestDto signupRequestDto)
+    public static ValidatedSignupRequest ValidateSignupRequest(
+        SignupRequestDto signupRequestDto,
+        SignupPolicyOptions signupPolicyOptions)
     {
         ArgumentNullException.ThrowIfNull(signupRequestDto);
+        ArgumentNullException.ThrowIfNull(signupPolicyOptions);
 
         var email = NormalizeEmail(signupRequestDto.Email);
         var mobileNumber = NormalizeMobileNumber(signupRequestDto.MobileNumber);
@@ -19,6 +23,8 @@ internal static class AuthValidationHelper
         var firstName = RequireValue(signupRequestDto.FirstName, "First name is required.");
         var lastName = RequireValue(signupRequestDto.LastName, "Last name is required.");
         var displayName = NormalizeOptional(signupRequestDto.DisplayName);
+        var termsVersion = RequireValue(signupRequestDto.TermsVersion, "Terms version is required.");
+        var privacyVersion = RequireValue(signupRequestDto.PrivacyVersion, "Privacy version is required.");
 
         if (password.Length < 8)
         {
@@ -28,6 +34,26 @@ internal static class AuthValidationHelper
         if (!string.Equals(password, confirmPassword, StringComparison.Ordinal))
         {
             throw new ArgumentException("Password and confirm password must match.", nameof(signupRequestDto));
+        }
+
+        if (!signupRequestDto.HasAcceptedTerms)
+        {
+            throw new ArgumentException("Terms of Service must be accepted.", nameof(signupRequestDto));
+        }
+
+        if (!signupRequestDto.HasAcceptedPrivacy)
+        {
+            throw new ArgumentException("Privacy Policy must be accepted.", nameof(signupRequestDto));
+        }
+
+        if (!string.Equals(termsVersion, signupPolicyOptions.TermsVersion, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Terms version is invalid or outdated.", nameof(signupRequestDto));
+        }
+
+        if (!string.Equals(privacyVersion, signupPolicyOptions.PrivacyVersion, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Privacy version is invalid or outdated.", nameof(signupRequestDto));
         }
 
         var applications = new List<ValidatedRoleApplication>();
@@ -62,6 +88,8 @@ internal static class AuthValidationHelper
             firstName,
             lastName,
             displayName,
+            termsVersion,
+            privacyVersion,
             applications);
     }
 
@@ -138,6 +166,8 @@ internal sealed record ValidatedSignupRequest(
     string FirstName,
     string LastName,
     string? DisplayName,
+    string TermsVersion,
+    string PrivacyVersion,
     IReadOnlyList<ValidatedRoleApplication> RoleApplications);
 
 internal sealed record ValidatedRoleApplication(

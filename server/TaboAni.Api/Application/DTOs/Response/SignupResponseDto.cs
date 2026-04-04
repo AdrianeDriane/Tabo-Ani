@@ -12,7 +12,6 @@ public sealed class SignupResponseDto
     public string AccountStatus { get; init; } = string.Empty;
     public IReadOnlyList<SignupRoleApplicationResponseDto> RequestedRoles { get; init; } =
         Array.Empty<SignupRoleApplicationResponseDto>();
-    public string? EmailVerificationTokenPreview { get; init; }
 }
 
 public sealed class SignupRoleApplicationResponseDto
@@ -24,9 +23,14 @@ public sealed class SignupRoleApplicationResponseDto
 
 public sealed class EmailVerificationStatusResponseDto
 {
+    public string Status { get; init; } = string.Empty;
     public Guid UserId { get; init; }
     public string Email { get; init; } = string.Empty;
     public bool IsEmailVerified { get; init; }
     public DateTimeOffset? VerifiedAt { get; init; }
-    public string? EmailVerificationTokenPreview { get; init; }
+}
+
+public sealed class ResendEmailVerificationResponseDto
+{
+    public string Status { get; init; } = string.Empty;
 }

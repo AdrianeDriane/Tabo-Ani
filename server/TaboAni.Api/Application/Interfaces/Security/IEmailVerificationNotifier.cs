@@ -2,5 +2,5 @@ namespace TaboAni.Api.Application.Interfaces.Security;
 
 public interface IEmailVerificationNotifier
 {
-    Task NotifyAsync(string email, string token, CancellationToken cancellationToken = default);
+    Task NotifyAsync(string email, string verificationUrl, CancellationToken cancellationToken = default);
 }

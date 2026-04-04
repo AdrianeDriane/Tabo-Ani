@@ -6,7 +6,7 @@ namespace TaboAni.Api.Application.Interfaces.Service;
 public interface IAuthService
 {
     Task<SignupResponseDto> SignupAsync(SignupRequestDto signupRequestDto, CancellationToken cancellationToken = default);
-    Task<EmailVerificationStatusResponseDto> ResendVerificationAsync(
+    Task<ResendEmailVerificationResponseDto> ResendVerificationAsync(
         ResendEmailVerificationRequestDto requestDto,
         CancellationToken cancellationToken = default);
     Task<EmailVerificationStatusResponseDto> VerifyEmailAsync(

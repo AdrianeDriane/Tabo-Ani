@@ -1,7 +1,10 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using TaboAni.Api.ExceptionHandling;
 using TaboAni.Api.Application.Configuration;
+using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Extensions;
 using TaboAni.Api.Data;
 using TaboAni.Api.Data.Seeding;
@@ -19,6 +22,8 @@ var shouldSeedPlatformRoles = args.Contains("--seed-platform-roles", StringCompa
 DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
+var frontendOptions = builder.Configuration.GetSection(FrontendOptions.SectionName).Get<FrontendOptions>() ?? new FrontendOptions();
+var authRateLimitOptions = builder.Configuration.GetSection(AuthRateLimitOptions.SectionName).Get<AuthRateLimitOptions>() ?? new AuthRateLimitOptions();
 
 var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
@@ -42,9 +47,51 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiDocumentation();
 builder.Services.AddApplicationDependencies();
+builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
+builder.Services.Configure<EmailVerificationOptions>(builder.Configuration.GetSection(EmailVerificationOptions.SectionName));
+builder.Services.Configure<SignupPolicyOptions>(builder.Configuration.GetSection(SignupPolicyOptions.SectionName));
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+
+        await context.HttpContext.Response.WriteAsJsonAsync(new ErrorResponseDto
+        {
+            Success = false,
+            Message = "Too many requests.",
+            Errors = ["Please wait a moment before trying again."]
+        }, cancellationToken);
+    };
+
+    options.AddPolicy("auth-signup", httpContext =>
+        CreateAuthRateLimitPartition(
+            httpContext,
+            "signup",
+            authRateLimitOptions.SignupPermitLimit,
+            TimeSpan.FromMinutes(authRateLimitOptions.SignupWindowMinutes),
+            authRateLimitOptions.QueueLimit));
+
+    options.AddPolicy("auth-resend-verification", httpContext =>
+        CreateAuthRateLimitPartition(
+            httpContext,
+            "resend",
+            authRateLimitOptions.ResendPermitLimit,
+            TimeSpan.FromMinutes(authRateLimitOptions.ResendWindowMinutes),
+            authRateLimitOptions.QueueLimit));
+
+    options.AddPolicy("auth-verify-email", httpContext =>
+        CreateAuthRateLimitPartition(
+            httpContext,
+            "verify",
+            authRateLimitOptions.VerifyPermitLimit,
+            TimeSpan.FromMinutes(authRateLimitOptions.VerifyWindowMinutes),
+            authRateLimitOptions.QueueLimit));
+});
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -52,7 +99,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.WithOrigins(ResolveAllowedOrigins(frontendOptions))
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -88,10 +135,48 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("Frontend");
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();
 
 public partial class Program
+static string[] ResolveAllowedOrigins(FrontendOptions frontendOptions)
+{
+    var allowedOrigins = frontendOptions.AllowedOrigins
+        .Where(origin => !string.IsNullOrWhiteSpace(origin))
+        .Select(origin => origin.TrimEnd('/'))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+
+    if (allowedOrigins.Length > 0)
+    {
+        return allowedOrigins;
+    }
+
+    return [frontendOptions.ClientAppBaseUrl.TrimEnd('/')];
+}
+
+static RateLimitPartition<string> CreateAuthRateLimitPartition(
+    HttpContext httpContext,
+    string partitionName,
+    int permitLimit,
+    TimeSpan window,
+    int queueLimit)
+{
+    var remoteIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+    return RateLimitPartition.GetFixedWindowLimiter(
+        $"{partitionName}:{remoteIp}",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permitLimit,
+            Window = window,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = queueLimit,
+            AutoReplenishment = true
+        });
+}
+
 {
 }

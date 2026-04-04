@@ -1,5 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Options;
+using TaboAni.Api.Application.Common;
+using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.DTOs.Request;
 using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Application.Interfaces.Repository;
@@ -14,24 +17,36 @@ namespace TaboAni.Api.Application.Implementations.Service;
 public sealed class AuthService(
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
-    IEmailVerificationNotifier emailVerificationNotifier) : IAuthService
+    IEmailVerificationNotifier emailVerificationNotifier,
+    IOptions<EmailVerificationOptions> emailVerificationOptions,
+    IOptions<FrontendOptions> frontendOptions,
+    IOptions<SignupPolicyOptions> signupPolicyOptions) : IAuthService
 {
     private const string BuyerRoleCode = "BUYER";
     private const string FarmerRoleCode = "FARMER";
+    private const string PendingEmailVerificationAccountStatus = "PENDING_EMAIL_VERIFICATION";
     private const string ActiveAccountStatus = "ACTIVE";
     private const string PendingEmailVerificationStatus = "PENDING_EMAIL_VERIFICATION";
     private const string PendingReviewStatus = "PENDING_REVIEW";
-    private static readonly TimeSpan VerificationTokenLifetime = TimeSpan.FromHours(24);
+    private const string TermsPolicyType = "TERMS_OF_SERVICE";
+    private const string PrivacyPolicyType = "PRIVACY_POLICY";
+    private const string DispatchAcceptedStatus = "ACCEPTED";
+    private const string VerifiedStatus = "VERIFIED";
+    private const string AlreadyVerifiedStatus = "ALREADY_VERIFIED";
+    private const string InvalidOrExpiredStatus = "INVALID_OR_EXPIRED";
 
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly IEmailVerificationNotifier _emailVerificationNotifier = emailVerificationNotifier;
+    private readonly EmailVerificationOptions _emailVerificationOptions = emailVerificationOptions.Value;
+    private readonly FrontendOptions _frontendOptions = frontendOptions.Value;
+    private readonly SignupPolicyOptions _signupPolicyOptions = signupPolicyOptions.Value;
 
     public async Task<SignupResponseDto> SignupAsync(
         SignupRequestDto signupRequestDto,
         CancellationToken cancellationToken = default)
     {
-        var validatedRequest = AuthValidationHelper.ValidateSignupRequest(signupRequestDto);
+        var validatedRequest = AuthValidationHelper.ValidateSignupRequest(signupRequestDto, _signupPolicyOptions);
 
         if (await _unitOfWork.Auth.EmailExistsAsync(validatedRequest.Email, cancellationToken))
         {
@@ -49,43 +64,51 @@ public sealed class AuthService(
         var now = DateTimeOffset.UtcNow;
         var user = BuildUser(validatedRequest, now);
         var emailVerificationToken = CreateEmailVerificationToken(user.UserId, now);
+        var verificationUrl = BuildEmailVerificationUrl(emailVerificationToken.Token);
         var requestedRoles = new List<SignupRoleApplicationResponseDto>();
 
-        await _unitOfWork.Auth.AddUserAsync(user, cancellationToken);
-
-        foreach (var application in validatedRequest.RoleApplications)
+        await ServiceTransactionExecutor.ExecuteWithinTransactionAsync(_unitOfWork, async () =>
         {
-            var role = roles[application.RoleCode];
-            var kycApplication = BuildKycApplication(user.UserId, role.RoleId, now);
+            await _unitOfWork.Auth.AddUserAsync(user, cancellationToken);
 
-            await _unitOfWork.Auth.AddKycApplicationAsync(kycApplication, cancellationToken);
-
-            switch (application.RoleCode)
+            foreach (var policyAcceptance in BuildPolicyAcceptances(user.UserId, validatedRequest, now))
             {
-                case BuyerRoleCode:
-                    await _unitOfWork.Auth.AddBuyerProfileAsync(
-                        BuildBuyerProfile(user.UserId, application, validatedRequest, now),
-                        cancellationToken);
-                    break;
-                case FarmerRoleCode:
-                    await _unitOfWork.Auth.AddFarmerProfileAsync(
-                        BuildFarmerProfile(user.UserId, application, now),
-                        cancellationToken);
-                    break;
+                await _unitOfWork.Auth.AddUserPolicyAcceptanceAsync(policyAcceptance, cancellationToken);
             }
 
-            requestedRoles.Add(new SignupRoleApplicationResponseDto
+            foreach (var application in validatedRequest.RoleApplications)
             {
-                RoleCode = application.RoleCode,
-                KycApplicationId = kycApplication.KycApplicationId,
-                ApplicationStatus = kycApplication.ApplicationStatus
-            });
-        }
+                var role = roles[application.RoleCode];
+                var kycApplication = BuildKycApplication(user.UserId, role.RoleId, now);
 
-        await _unitOfWork.Auth.AddEmailVerificationTokenAsync(emailVerificationToken.Entity, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.Auth.AddKycApplicationAsync(kycApplication, cancellationToken);
 
-        await _emailVerificationNotifier.NotifyAsync(user.Email!, emailVerificationToken.Token, cancellationToken);
+                switch (application.RoleCode)
+                {
+                    case BuyerRoleCode:
+                        await _unitOfWork.Auth.AddBuyerProfileAsync(
+                            BuildBuyerProfile(user.UserId, application, validatedRequest, now),
+                            cancellationToken);
+                        break;
+                    case FarmerRoleCode:
+                        await _unitOfWork.Auth.AddFarmerProfileAsync(
+                            BuildFarmerProfile(user.UserId, application, now),
+                            cancellationToken);
+                        break;
+                }
+
+                requestedRoles.Add(new SignupRoleApplicationResponseDto
+                {
+                    RoleCode = application.RoleCode,
+                    KycApplicationId = kycApplication.KycApplicationId,
+                    ApplicationStatus = kycApplication.ApplicationStatus
+                });
+            }
+
+            await _unitOfWork.Auth.AddEmailVerificationTokenAsync(emailVerificationToken.Entity, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _emailVerificationNotifier.NotifyAsync(user.Email!, verificationUrl, cancellationToken);
+        }, cancellationToken);
 
         return new SignupResponseDto
         {
@@ -97,46 +120,45 @@ public sealed class AuthService(
             DisplayName = user.DisplayName,
             IsEmailVerified = user.IsEmailVerified,
             AccountStatus = user.AccountStatus,
-            RequestedRoles = requestedRoles,
-            EmailVerificationTokenPreview = emailVerificationToken.Token
+            RequestedRoles = requestedRoles
         };
     }
 
-    public async Task<EmailVerificationStatusResponseDto> ResendVerificationAsync(
+    public async Task<ResendEmailVerificationResponseDto> ResendVerificationAsync(
         ResendEmailVerificationRequestDto requestDto,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(requestDto);
 
         var email = AuthValidationHelper.ValidateEmailAddress(requestDto.Email);
-        var user = await _unitOfWork.Auth.GetUserByEmailAsync(email, cancellationToken)
-            ?? throw new EmailVerificationUserNotFoundException(email);
+        var user = await _unitOfWork.Auth.GetUserByEmailAsync(email, cancellationToken);
 
-        if (user.IsEmailVerified)
+        if (user is null || user.IsEmailVerified)
         {
-            return new EmailVerificationStatusResponseDto
-            {
-                UserId = user.UserId,
-                Email = user.Email ?? string.Empty,
-                IsEmailVerified = true
-            };
+            return CreateAcceptedResendResponse();
         }
 
         var now = DateTimeOffset.UtcNow;
-        var token = CreateEmailVerificationToken(user.UserId, now);
-
-        await _unitOfWork.Auth.AddEmailVerificationTokenAsync(token.Entity, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        await _emailVerificationNotifier.NotifyAsync(user.Email!, token.Token, cancellationToken);
-
-        return new EmailVerificationStatusResponseDto
+        var latestToken = await _unitOfWork.Auth.GetLatestEmailVerificationTokenByUserIdAsync(user.UserId, cancellationToken);
+        if (latestToken is not null && latestToken.CreatedAt.AddSeconds(_emailVerificationOptions.ResendCooldownSeconds) > now)
         {
-            UserId = user.UserId,
-            Email = user.Email ?? string.Empty,
-            IsEmailVerified = false,
-            EmailVerificationTokenPreview = token.Token
-        };
+            return CreateAcceptedResendResponse();
+        }
+
+        var token = CreateEmailVerificationToken(user.UserId, now);
+        var verificationUrl = BuildEmailVerificationUrl(token.Token);
+
+        await ServiceTransactionExecutor.ExecuteWithinTransactionAsync(_unitOfWork, async () =>
+        {
+            var pendingTokens = await _unitOfWork.Auth.GetPendingEmailVerificationTokensByUserIdAsync(user.UserId, cancellationToken);
+            InvalidateTokens(pendingTokens, now);
+
+            await _unitOfWork.Auth.AddEmailVerificationTokenAsync(token.Entity, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _emailVerificationNotifier.NotifyAsync(user.Email!, verificationUrl, cancellationToken);
+        }, cancellationToken);
+
+        return CreateAcceptedResendResponse();
     }
 
     public async Task<EmailVerificationStatusResponseDto> VerifyEmailAsync(
@@ -145,50 +167,63 @@ public sealed class AuthService(
     {
         ArgumentNullException.ThrowIfNull(requestDto);
 
-        var email = AuthValidationHelper.ValidateEmailAddress(requestDto.Email);
         var token = AuthValidationHelper.ValidateVerificationToken(requestDto.Token);
-        var user = await _unitOfWork.Auth.GetUserByEmailAsync(email, cancellationToken)
-            ?? throw new EmailVerificationUserNotFoundException(email);
-
-        if (user.IsEmailVerified)
-        {
-            return new EmailVerificationStatusResponseDto
-            {
-                UserId = user.UserId,
-                Email = user.Email ?? string.Empty,
-                IsEmailVerified = true
-            };
-        }
-
         var now = DateTimeOffset.UtcNow;
         var tokenHash = ComputeTokenHash(token);
-        var verificationToken = await _unitOfWork.Auth.GetActiveEmailVerificationTokenAsync(
-            user.UserId,
-            tokenHash,
-            now,
-            cancellationToken);
+        var verificationToken = await _unitOfWork.Auth.GetEmailVerificationTokenByHashAsync(tokenHash, cancellationToken);
 
         if (verificationToken is null)
         {
-            throw new EmailVerificationTokenInvalidException("Verification token is invalid or has expired.");
+            return CreateInvalidVerificationResponse();
         }
 
-        user.IsEmailVerified = true;
-        user.UpdatedAt = now;
-        verificationToken.ConsumedAt = now;
-
-        var kycApplications = await _unitOfWork.Auth.GetKycApplicationsByUserIdAsync(user.UserId, cancellationToken);
-        foreach (var kycApplication in kycApplications.Where(application =>
-                     application.ApplicationStatus == PendingEmailVerificationStatus))
+        var user = await _unitOfWork.Auth.GetUserByIdAsync(verificationToken.UserId, cancellationToken);
+        if (user is null)
         {
-            kycApplication.ApplicationStatus = PendingReviewStatus;
-            kycApplication.UpdatedAt = now;
+            return CreateInvalidVerificationResponse();
         }
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        if (verificationToken.ConsumedAt is not null && user.IsEmailVerified)
+        {
+            return CreateAlreadyVerifiedResponse(user, verificationToken.ConsumedAt);
+        }
+
+        if (verificationToken.InvalidatedAt is not null || verificationToken.ExpiresAt < now)
+        {
+            return CreateInvalidVerificationResponse();
+        }
+
+        if (user.IsEmailVerified)
+        {
+            return CreateAlreadyVerifiedResponse(user, verificationToken.ConsumedAt ?? user.UpdatedAt);
+        }
+
+        await ServiceTransactionExecutor.ExecuteWithinTransactionAsync(_unitOfWork, async () =>
+        {
+            user.IsEmailVerified = true;
+            user.AccountStatus = ActiveAccountStatus;
+            user.UpdatedAt = now;
+            verificationToken.ConsumedAt = now;
+
+            var pendingTokens = await _unitOfWork.Auth.GetPendingEmailVerificationTokensByUserIdAsync(user.UserId, cancellationToken);
+            InvalidateTokens(
+                pendingTokens.Where(tokenEntity => tokenEntity.EmailVerificationTokenId != verificationToken.EmailVerificationTokenId),
+                now);
+
+            var kycApplications = await _unitOfWork.Auth.GetKycApplicationsByUserIdAsync(user.UserId, cancellationToken);
+            foreach (var kycApplication in kycApplications.Where(application =>
+                         application.ApplicationStatus == PendingEmailVerificationStatus))
+            {
+                kycApplication.ApplicationStatus = PendingReviewStatus;
+                kycApplication.UpdatedAt = now;
+            }
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
 
         return new EmailVerificationStatusResponseDto
         {
+            Status = VerifiedStatus,
             UserId = user.UserId,
             Email = user.Email ?? string.Empty,
             IsEmailVerified = true,
@@ -221,7 +256,7 @@ public sealed class AuthService(
         return roleCode is BuyerRoleCode or FarmerRoleCode;
     }
 
-    private static GeneratedVerificationToken CreateEmailVerificationToken(Guid userId, DateTimeOffset now)
+    private GeneratedVerificationToken CreateEmailVerificationToken(Guid userId, DateTimeOffset now)
     {
         var tokenBytes = RandomNumberGenerator.GetBytes(24);
         var token = Convert.ToHexString(tokenBytes);
@@ -233,7 +268,7 @@ public sealed class AuthService(
                 EmailVerificationTokenId = Guid.NewGuid(),
                 UserId = userId,
                 TokenHash = ComputeTokenHash(token),
-                ExpiresAt = now.Add(VerificationTokenLifetime),
+                ExpiresAt = now.AddHours(_emailVerificationOptions.TokenLifetimeHours),
                 CreatedAt = now
             });
     }
@@ -258,7 +293,7 @@ public sealed class AuthService(
             DisplayName = validatedRequest.DisplayName,
             IsEmailVerified = false,
             IsMobileVerified = false,
-            AccountStatus = ActiveAccountStatus,
+            AccountStatus = PendingEmailVerificationAccountStatus,
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -311,6 +346,90 @@ public sealed class AuthService(
             SubmittedAt = now,
             CreatedAt = now,
             UpdatedAt = now
+        };
+    }
+
+    private IEnumerable<UserPolicyAcceptance> BuildPolicyAcceptances(
+        Guid userId,
+        ValidatedSignupRequest validatedRequest,
+        DateTimeOffset now)
+    {
+        yield return new UserPolicyAcceptance
+        {
+            UserPolicyAcceptanceId = Guid.NewGuid(),
+            UserId = userId,
+            PolicyType = TermsPolicyType,
+            PolicyVersion = validatedRequest.TermsVersion,
+            AcceptedAt = now,
+            CreatedAt = now
+        };
+
+        yield return new UserPolicyAcceptance
+        {
+            UserPolicyAcceptanceId = Guid.NewGuid(),
+            UserId = userId,
+            PolicyType = PrivacyPolicyType,
+            PolicyVersion = validatedRequest.PrivacyVersion,
+            AcceptedAt = now,
+            CreatedAt = now
+        };
+    }
+
+    private string BuildEmailVerificationUrl(string token)
+    {
+        var baseUri = new Uri(AppendTrailingSlash(_frontendOptions.ClientAppBaseUrl), UriKind.Absolute);
+        var verificationUri = new Uri(baseUri, _emailVerificationOptions.VerificationPath.TrimStart('/'));
+        var builder = new UriBuilder(verificationUri)
+        {
+            Query = $"token={Uri.EscapeDataString(token)}"
+        };
+
+        return builder.Uri.ToString();
+    }
+
+    private static string AppendTrailingSlash(string value)
+    {
+        return value.EndsWith("/", StringComparison.Ordinal) ? value : $"{value}/";
+    }
+
+    private static void InvalidateTokens(IEnumerable<EmailVerificationToken> tokens, DateTimeOffset now)
+    {
+        foreach (var token in tokens)
+        {
+            token.InvalidatedAt ??= now;
+        }
+    }
+
+    private static ResendEmailVerificationResponseDto CreateAcceptedResendResponse()
+    {
+        return new ResendEmailVerificationResponseDto
+        {
+            Status = DispatchAcceptedStatus
+        };
+    }
+
+    private static EmailVerificationStatusResponseDto CreateInvalidVerificationResponse()
+    {
+        return new EmailVerificationStatusResponseDto
+        {
+            Status = InvalidOrExpiredStatus,
+            UserId = Guid.Empty,
+            Email = string.Empty,
+            IsEmailVerified = false
+        };
+    }
+
+    private static EmailVerificationStatusResponseDto CreateAlreadyVerifiedResponse(
+        User user,
+        DateTimeOffset? verifiedAt)
+    {
+        return new EmailVerificationStatusResponseDto
+        {
+            Status = AlreadyVerifiedStatus,
+            UserId = user.UserId,
+            Email = user.Email ?? string.Empty,
+            IsEmailVerified = true,
+            VerifiedAt = verifiedAt
         };
     }
 

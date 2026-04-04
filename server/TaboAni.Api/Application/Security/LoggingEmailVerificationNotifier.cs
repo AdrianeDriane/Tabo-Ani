@@ -7,12 +7,11 @@ public sealed class LoggingEmailVerificationNotifier(ILogger<LoggingEmailVerific
 {
     private readonly ILogger<LoggingEmailVerificationNotifier> _logger = logger;
 
-    public Task NotifyAsync(string email, string token, CancellationToken cancellationToken = default)
+    public Task NotifyAsync(string email, string verificationUrl, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
-            "Email verification token generated for {Email}. Token: {Token}",
-            email,
-            token);
+            "Email verification requested for {Email}. A delivery implementation should send the verification link without logging secrets.",
+            email);
 
         return Task.CompletedTask;
     }

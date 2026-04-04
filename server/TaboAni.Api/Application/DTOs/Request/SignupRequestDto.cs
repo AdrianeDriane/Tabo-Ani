@@ -9,6 +9,10 @@ public sealed class SignupRequestDto
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
     public string? DisplayName { get; init; }
+    public bool HasAcceptedTerms { get; init; }
+    public string TermsVersion { get; init; } = string.Empty;
+    public bool HasAcceptedPrivacy { get; init; }
+    public string PrivacyVersion { get; init; } = string.Empty;
     public SignupBuyerApplicationRequestDto? BuyerApplication { get; init; }
     public SignupFarmerApplicationRequestDto? FarmerApplication { get; init; }
 }
@@ -33,6 +37,5 @@ public sealed class ResendEmailVerificationRequestDto
 
 public sealed class VerifyEmailRequestDto
 {
-    public string Email { get; init; } = string.Empty;
     public string Token { get; init; } = string.Empty;
 }
