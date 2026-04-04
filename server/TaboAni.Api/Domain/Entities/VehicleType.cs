@@ -8,5 +8,6 @@ public class VehicleType
     public decimal MaxCapacityKg { get; set; }
     public bool IsActive { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+    public ICollection<FarmerListingVehicleType> FarmerListings { get; set; } = new List<FarmerListingVehicleType>();
 }
 

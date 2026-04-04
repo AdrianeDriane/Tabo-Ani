@@ -2,10 +2,14 @@ import type { SupplierDirectoryItem } from "../types/buyerDashboard.types";
 
 type SupplierDirectoryProps = {
   suppliers: SupplierDirectoryItem[];
+  onQuickReorder?: (supplierName: string) => void;
+  onMessage?: (supplierName: string) => void;
 };
 
 export default function SupplierDirectory({
   suppliers,
+  onQuickReorder,
+  onMessage,
 }: SupplierDirectoryProps) {
   return (
     <section data-purpose="supplier-directory">
@@ -40,10 +44,18 @@ export default function SupplierDirectory({
                 </span>
               </div>
               <div className="flex gap-2">
-                <button className="flex-1 py-2 bg-agri-green text-white text-[10px] font-bold rounded-xl">
+                <button
+                  className="flex-1 py-2 bg-agri-green text-white text-[10px] font-bold rounded-xl"
+                  type="button"
+                  onClick={() => onQuickReorder?.(supplier.name)}
+                >
                   Quick Reorder
                 </button>
-                <button className="px-3 py-2 bg-agri-light text-agri-green text-[10px] font-bold rounded-xl border border-agri-green/10">
+                <button
+                  className="px-3 py-2 bg-agri-light text-agri-green text-[10px] font-bold rounded-xl border border-agri-green/10"
+                  type="button"
+                  onClick={() => onMessage?.(supplier.name)}
+                >
                   Message
                 </button>
               </div>

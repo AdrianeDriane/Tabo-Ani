@@ -6,6 +6,7 @@ export { default as SupplierDirectory } from "./components/SupplierDirectory";
 export { default as QuickActions } from "./components/QuickActions";
 export { default as PreferredSuppliers } from "./components/PreferredSuppliers";
 export { default as OrderHistoryTimeline } from "./components/OrderHistoryTimeline";
+export { default as BuyerDashboardModal } from "./components/BuyerDashboardModal";
 
 export {
   metrics,

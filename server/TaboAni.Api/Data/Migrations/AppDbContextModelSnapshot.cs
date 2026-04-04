@@ -659,16 +659,6 @@ namespace TaboAni.Api.Migrations
 
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.FarmerListingVehicleType", b =>
                 {
-                    b.Property<Guid>("FarmerListingVehicleTypeId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("farmer_listing_vehicle_type_id");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at")
-                        .HasDefaultValueSql("now()");
-
                     b.Property<Guid>("ProduceListingId")
                         .HasColumnType("uuid")
                         .HasColumnName("produce_listing_id");
@@ -677,15 +667,17 @@ namespace TaboAni.Api.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("vehicle_type_id");
 
-                    b.HasKey("FarmerListingVehicleTypeId")
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("ProduceListingId", "VehicleTypeId")
                         .HasName("pk_farmer_listing_vehicle_types");
 
                     b.HasIndex("VehicleTypeId")
                         .HasDatabaseName("ix_farmer_listing_vehicle_types_vehicle_type_id");
-
-                    b.HasIndex("ProduceListingId", "VehicleTypeId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_farmer_listing_vehicle_types_produce_listing_id_vehicle_typ~");
 
                     b.ToTable("farmer_listing_vehicle_types", (string)null);
                 });
@@ -2511,19 +2503,23 @@ namespace TaboAni.Api.Migrations
 
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.FarmerListingVehicleType", b =>
                 {
-                    b.HasOne("TaboAni.Api.Domain.Entities.ProduceListing", null)
-                        .WithMany()
+                    b.HasOne("TaboAni.Api.Domain.Entities.ProduceListing", "ProduceListing")
+                        .WithMany("AllowedVehicleTypes")
                         .HasForeignKey("ProduceListingId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_farmer_listing_vehicle_types_produce_listings_produce_listi~");
 
-                    b.HasOne("TaboAni.Api.Domain.Entities.VehicleType", null)
-                        .WithMany()
+                    b.HasOne("TaboAni.Api.Domain.Entities.VehicleType", "VehicleType")
+                        .WithMany("FarmerListings")
                         .HasForeignKey("VehicleTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_farmer_listing_vehicle_types_vehicle_types_vehicle_type_id");
+
+                    b.Navigation("ProduceListing");
+
+                    b.Navigation("VehicleType");
                 });
 
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.FarmerPayout", b =>
@@ -2876,8 +2872,17 @@ namespace TaboAni.Api.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_wallet_transactions_wallets_wallet_id");
                 });
+
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.ProduceListing", b =>
+                {
+                    b.Navigation("AllowedVehicleTypes");
+                });
+
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.VehicleType", b =>
+                {
+                    b.Navigation("FarmerListings");
+                });
 #pragma warning restore 612, 618
         }
     }
 }
-

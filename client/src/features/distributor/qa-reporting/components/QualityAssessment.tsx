@@ -63,8 +63,8 @@ export default function QualityAssessment({
             <button
               className={
                 quantityMatch
-                  ? "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-agri-green shadow-sm"
-                  : "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-red-600 transition-colors"
+                  ? "px-4 py-1.5 text-xs font-bold rounded-md bg-agri-leaf/10 text-agri-green shadow-sm"
+                  : "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-agri-accent transition-colors"
               }
               type="button"
               onClick={() => onQuantityMatchChange(true)}
@@ -74,8 +74,8 @@ export default function QualityAssessment({
             <button
               className={
                 quantityMatch
-                  ? "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-red-600 transition-colors"
-                  : "px-4 py-1.5 text-xs font-bold rounded-md bg-white text-red-600 shadow-sm"
+                  ? "px-4 py-1.5 text-xs font-bold rounded-md text-gray-500 hover:text-agri-accent transition-colors"
+                  : "px-4 py-1.5 text-xs font-bold rounded-md bg-agri-accent/10 text-agri-accent shadow-sm"
               }
               type="button"
               onClick={() => onQuantityMatchChange(false)}
@@ -95,8 +95,8 @@ export default function QualityAssessment({
                 key={option.value}
                 className={
                   grade === option.value
-                    ? "flex-1 py-2 bg-agri-leaf/10 text-agri-green font-bold text-sm rounded-lg"
-                    : "flex-1 py-2 text-gray-400 font-bold text-sm rounded-lg hover:bg-agri-leaf/5"
+                    ? "flex-1 py-2 bg-agri-leaf/15 text-agri-green font-bold text-sm rounded-lg"
+                    : "flex-1 py-2 text-gray-500 font-bold text-sm rounded-lg hover:bg-agri-leaf/10"
                 }
                 type="button"
                 onClick={() => onGradeChange(option.value)}
