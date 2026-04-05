@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaboAni.Api.Api.Authorization;
 using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.DTOs.Request;
 using TaboAni.Api.Application.DTOs.Response;
@@ -9,7 +10,7 @@ using TaboAni.Api.Application.Interfaces.Service;
 namespace TaboAni.Api.Controllers.V1;
 
 [ApiController]
-[Authorize(Policy = AuthPolicyNames.Buyer)]
+[RequireRoles(RoleCodes.Buyer)]
 [Route("api/v1/users/{userId:guid}/cart")]
 public sealed class CartController(
     ICartService cartService,

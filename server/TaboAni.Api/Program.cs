@@ -117,13 +117,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(AuthPolicyNames.Admin, policy =>
-        policy.RequireAuthenticatedUser().RequireRole("ADMIN"));
+        policy.RequireAuthenticatedUser().RequireRole(RoleCodes.Admin));
     options.AddPolicy(AuthPolicyNames.Farmer, policy =>
-        policy.RequireAuthenticatedUser().RequireRole("FARMER"));
+        policy.RequireAuthenticatedUser().RequireRole(RoleCodes.Farmer));
     options.AddPolicy(AuthPolicyNames.Buyer, policy =>
-        policy.RequireAuthenticatedUser().RequireRole("BUYER"));
+        policy.RequireAuthenticatedUser().RequireRole(RoleCodes.Buyer));
     options.AddPolicy(AuthPolicyNames.Distributor, policy =>
-        policy.RequireAuthenticatedUser().RequireRole("DISTRIBUTOR"));
+        policy.RequireAuthenticatedUser().RequireRole(RoleCodes.Distributor));
 });
 builder.Services.AddRateLimiter(options =>
 {
@@ -146,6 +146,22 @@ builder.Services.AddRateLimiter(options =>
             "signup",
             authRateLimitOptions.SignupPermitLimit,
             TimeSpan.FromMinutes(authRateLimitOptions.SignupWindowMinutes),
+            authRateLimitOptions.QueueLimit));
+
+    options.AddPolicy("auth-login", httpContext =>
+        CreateAuthRateLimitPartition(
+            httpContext,
+            "login",
+            authRateLimitOptions.LoginPermitLimit,
+            TimeSpan.FromMinutes(authRateLimitOptions.LoginWindowMinutes),
+            authRateLimitOptions.QueueLimit));
+
+    options.AddPolicy("auth-refresh", httpContext =>
+        CreateAuthRateLimitPartition(
+            httpContext,
+            "refresh",
+            authRateLimitOptions.RefreshPermitLimit,
+            TimeSpan.FromMinutes(authRateLimitOptions.RefreshWindowMinutes),
             authRateLimitOptions.QueueLimit));
 
     options.AddPolicy("auth-resend-verification", httpContext =>

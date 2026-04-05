@@ -57,6 +57,10 @@ public sealed class AuthRateLimitOptions
 {
     public const string SectionName = "RateLimiting:Auth";
 
+    public int LoginPermitLimit { get; init; } = 5;
+    public int LoginWindowMinutes { get; init; } = 15;
+    public int RefreshPermitLimit { get; init; } = 30;
+    public int RefreshWindowMinutes { get; init; } = 5;
     public int SignupPermitLimit { get; init; } = 5;
     public int SignupWindowMinutes { get; init; } = 15;
     public int ResendPermitLimit { get; init; } = 3;

@@ -14,12 +14,15 @@ namespace TaboAni.Api.Controllers.V1;
 [Route("api/v1/auth")]
 public sealed class AuthController(
     IAuthService authService,
-    IOptions<AuthOptions> authOptions) : ControllerBase
+    IOptions<AuthOptions> authOptions,
+    IOptions<FrontendOptions> frontendOptions) : ControllerBase
 {
     private readonly IAuthService _authService = authService;
     private readonly AuthOptions _authOptions = authOptions.Value;
+    private readonly FrontendOptions _frontendOptions = frontendOptions.Value;
 
     [HttpPost("login")]
+    [EnableRateLimiting("auth-login")]
     [ProducesResponseType(typeof(ApiResponseDto<SessionResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
@@ -38,13 +41,55 @@ public sealed class AuthController(
         });
     }
 
+    [HttpGet("session")]
+    [EnableRateLimiting("auth-refresh")]
+    [ProducesResponseType(typeof(ApiResponseDto<CurrentSessionResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetCurrentSession(CancellationToken cancellationToken)
+    {
+        EnsureAllowedCookieRequestOrigin();
+
+        var refreshToken = Request.Cookies[_authOptions.RefreshTokenCookieName];
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return Ok(CreateCurrentSessionResponse(CurrentSessionStatuses.Anonymous));
+        }
+
+        try
+        {
+            var session = await _authService.RefreshAsync(refreshToken, cancellationToken);
+            AppendRefreshTokenCookie(session);
+
+            return Ok(CreateCurrentSessionResponse(
+                CurrentSessionStatuses.Authenticated,
+                session.Response));
+        }
+        catch (InvalidRefreshTokenException)
+        {
+            ClearRefreshTokenCookie();
+
+            return Ok(CreateCurrentSessionResponse(CurrentSessionStatuses.SessionExpired));
+        }
+        catch (AccountStatusNotAllowedException exception)
+        {
+            ClearRefreshTokenCookie();
+
+            return Ok(CreateCurrentSessionResponse(
+                CurrentSessionStatuses.AccountBlocked,
+                accountStatus: exception.AccountStatus));
+        }
+    }
+
     [HttpPost("refresh")]
+    [EnableRateLimiting("auth-refresh")]
     [ProducesResponseType(typeof(ApiResponseDto<SessionResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Refresh(CancellationToken cancellationToken)
     {
+        EnsureAllowedCookieRequestOrigin();
         var refreshToken = Request.Cookies[_authOptions.RefreshTokenCookieName];
 
         try
@@ -76,6 +121,7 @@ public sealed class AuthController(
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
+        EnsureAllowedCookieRequestOrigin();
         var refreshToken = Request.Cookies[_authOptions.RefreshTokenCookieName];
         await _authService.LogoutAsync(refreshToken, cancellationToken);
         ClearRefreshTokenCookie();
@@ -187,6 +233,82 @@ public sealed class AuthController(
         }
 
         return cookieOptions;
+    }
+
+    private ApiResponseDto<CurrentSessionResponseDto> CreateCurrentSessionResponse(
+        string status,
+        SessionResponseDto? session = null,
+        string? accountStatus = null)
+    {
+        return new ApiResponseDto<CurrentSessionResponseDto>
+        {
+            Success = true,
+            Message = "Current session resolved successfully.",
+            Data = new CurrentSessionResponseDto
+            {
+                Status = status,
+                Session = session,
+                AccountStatus = accountStatus
+            }
+        };
+    }
+
+    private void EnsureAllowedCookieRequestOrigin()
+    {
+        var requestOrigin = ResolveRequestOrigin();
+        if (requestOrigin is null)
+        {
+            throw new InvalidAuthOriginException();
+        }
+
+        var allowedOrigins = ResolveAllowedOrigins();
+        if (!allowedOrigins.Contains(requestOrigin, StringComparer.OrdinalIgnoreCase))
+        {
+            throw new InvalidAuthOriginException();
+        }
+    }
+
+    private string[] ResolveAllowedOrigins()
+    {
+        var configuredOrigins = _frontendOptions.AllowedOrigins
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(NormalizeOrigin)
+            .Where(origin => origin is not null)
+            .Select(origin => origin!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (configuredOrigins.Length > 0)
+        {
+            return configuredOrigins;
+        }
+
+        var fallbackOrigin = NormalizeOrigin(_frontendOptions.ClientAppBaseUrl);
+        return string.IsNullOrWhiteSpace(fallbackOrigin) ? [] : [fallbackOrigin];
+    }
+
+    private string? ResolveRequestOrigin()
+    {
+        if (Request.Headers.TryGetValue("Origin", out var originHeader) &&
+            !string.IsNullOrWhiteSpace(originHeader))
+        {
+            return NormalizeOrigin(originHeader.ToString());
+        }
+
+        if (Request.Headers.TryGetValue("Referer", out var refererHeader) &&
+            !string.IsNullOrWhiteSpace(refererHeader))
+        {
+            return NormalizeOrigin(refererHeader.ToString());
+        }
+
+        return null;
+    }
+
+    private static string? NormalizeOrigin(string candidate)
+    {
+        return Uri.TryCreate(candidate, UriKind.Absolute, out var uri)
+            ? uri.GetLeftPart(UriPartial.Authority).TrimEnd('/')
+            : null;
     }
 
     private static SameSiteMode ResolveSameSiteMode(string configuredValue)

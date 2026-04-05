@@ -6,4 +6,7 @@ public sealed class AccountStatusNotAllowedException(string accountStatus)
     : DomainException(
         "auth.account_status_not_allowed",
         $"Account status '{accountStatus}' is not allowed to authenticate.",
-        HttpStatusCode.Forbidden);
+        HttpStatusCode.Forbidden)
+{
+    public string AccountStatus { get; } = accountStatus;
+}
