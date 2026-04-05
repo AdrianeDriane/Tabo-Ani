@@ -5,6 +5,9 @@ import { ErrorPage } from "./pages/ErrorPage";
 import { ProtectedRoute } from "./features/auth";
 import { FarmerProfilePage } from "./pages/FarmerProfilePage";
 import { Landing } from "./pages/Landing";
+import { AccessDenied } from "./pages/auth/AccessDenied";
+import { AuthAccessCheck } from "./pages/auth/AuthAccessCheck";
+import { AccessPending } from "./pages/auth/AccessPending";
 import { Login } from "./pages/auth/Login";
 import { SignUp } from "./pages/auth/SignUp";
 import { VerifyEmail } from "./pages/auth/VerifyEmail";
@@ -21,6 +24,7 @@ import FarmerWallet from "./pages/farmer/Wallet";
 import { MessagesPage } from "./pages/MessagesPage";
 import { OrderDetailsPage } from "./pages/OrderDetailsPage";
 import { ProductDetailsPage } from "./pages/ProductDetailsPage";
+import { isAuthAccessCheckRouteEnabled } from "./features/auth/utils/authAccessCheck";
 
 export const router = createBrowserRouter([
   {
@@ -43,6 +47,19 @@ export const router = createBrowserRouter([
       {
         path: "verify-email",
         Component: VerifyEmail,
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "access-pending",
+            Component: AccessPending,
+          },
+          {
+            path: "access-denied",
+            Component: AccessDenied,
+          },
+        ],
       },
       {
         path: "admin",
@@ -139,6 +156,20 @@ export const router = createBrowserRouter([
         path: "product/:id",
         Component: ProductDetailsPage,
       },
+      ...(isAuthAccessCheckRouteEnabled
+        ? [
+            {
+              // TODO(auth-check): Remove this temporary frontend auth verification route after auth QA/UAT sign-off.
+              element: <ProtectedRoute />,
+              children: [
+                {
+                  path: "auth-check",
+                  element: <AuthAccessCheck />,
+                },
+              ],
+            },
+          ]
+        : []),
       {
         path: "*",
         element: <Navigate replace to="/" />,
