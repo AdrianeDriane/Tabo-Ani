@@ -5,23 +5,17 @@ import type {
   SignupResponse,
   VerifyEmailRequest,
 } from "../types/signup.types";
+import type {
+  LoginRequest,
+  LogoutResponse,
+  SessionResponse,
+} from "../types/auth.types";
+import type { ApiResponse, ErrorResponse } from "./authApi.types";
 import {
   CURRENT_PRIVACY_VERSION,
   CURRENT_TERMS_VERSION,
 } from "../constants/authPolicies";
 import { API_BASE_URL } from "../../../api/config";
-
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-};
-
-type ErrorResponse = {
-  success: boolean;
-  message: string;
-  errors: string[];
-};
 
 type SignupRequestPayload = {
   email: string;
@@ -49,16 +43,22 @@ type SignupRequestPayload = {
 export async function signup(
   payload: SignupRequestPayload
 ): Promise<ApiResponse<SignupResponse>> {
-  return postJson<ApiResponse<SignupResponse>>("/api/v1/auth/signup", payload);
+  return requestJson<ApiResponse<SignupResponse>>("/api/v1/auth/signup", {
+    method: "POST",
+    payload,
+  });
 }
 
 export async function resendVerification(
   email: string
 ): Promise<ApiResponse<ResendEmailVerificationResponse>> {
-  return postJson<ApiResponse<ResendEmailVerificationResponse>>(
+  return requestJson<ApiResponse<ResendEmailVerificationResponse>>(
     "/api/v1/auth/verify-email/resend",
     {
-      email,
+      method: "POST",
+      payload: {
+        email,
+      },
     }
   );
 }
@@ -66,10 +66,37 @@ export async function resendVerification(
 export async function verifyEmail(
   payload: VerifyEmailRequest
 ): Promise<ApiResponse<EmailVerificationStatusResponse>> {
-  return postJson<ApiResponse<EmailVerificationStatusResponse>>(
+  return requestJson<ApiResponse<EmailVerificationStatusResponse>>(
     "/api/v1/auth/verify-email",
-    payload
+    {
+      method: "POST",
+      payload,
+    }
   );
+}
+
+export async function login(
+  payload: LoginRequest
+): Promise<ApiResponse<SessionResponse>> {
+  return requestJson<ApiResponse<SessionResponse>>("/api/v1/auth/login", {
+    method: "POST",
+    payload,
+    credentials: "include",
+  });
+}
+
+export async function refreshSession(): Promise<ApiResponse<SessionResponse>> {
+  return requestJson<ApiResponse<SessionResponse>>("/api/v1/auth/refresh", {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export async function logoutSession(): Promise<ApiResponse<LogoutResponse>> {
+  return requestJson<ApiResponse<LogoutResponse>>("/api/v1/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
 }
 
 export function buildSignupPayload(
@@ -105,13 +132,32 @@ export function buildSignupPayload(
   };
 }
 
-async function postJson<T>(path: string, payload: object): Promise<T> {
+type RequestJsonOptions = {
+  method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+  payload?: object;
+  credentials?: RequestCredentials;
+  accessToken?: string;
+};
+
+async function requestJson<T>(
+  path: string,
+  options: RequestJsonOptions
+): Promise<T> {
+  const headers: HeadersInit = {};
+
+  if (options.payload) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (options.accessToken) {
+    headers.Authorization = `Bearer ${options.accessToken}`;
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+    method: options.method,
+    headers,
+    credentials: options.credentials,
+    body: options.payload ? JSON.stringify(options.payload) : undefined,
   });
 
   if (!response.ok) {
