@@ -95,6 +95,15 @@ public sealed class MarketplaceRepository(AppDbContext context) : IMarketplaceRe
             .AnyAsync(category => category.ProduceCategoryId == produceCategoryId, cancellationToken);
     }
 
+    public Task<Guid?> GetFarmerProfileOwnerUserIdAsync(Guid farmerProfileId, CancellationToken cancellationToken = default)
+    {
+        return _context.FarmerProfiles
+            .AsNoTracking()
+            .Where(profile => profile.FarmerProfileId == farmerProfileId)
+            .Select(profile => (Guid?)profile.UserId)
+            .SingleOrDefaultAsync(cancellationToken);
+    }
+
     public Task AddListingAsync(ProduceListing listing, CancellationToken cancellationToken = default)
     {
         return _context.ProduceListings.AddAsync(listing, cancellationToken).AsTask();

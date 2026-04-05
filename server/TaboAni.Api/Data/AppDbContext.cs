@@ -11,12 +11,15 @@ public partial class AppDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserPolicyAcceptance> UserPolicyAcceptances => Set<UserPolicyAcceptance>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<FarmerProfile> FarmerProfiles => Set<FarmerProfile>();
     public DbSet<BuyerProfile> BuyerProfiles => Set<BuyerProfile>();
     public DbSet<DistributorProfile> DistributorProfiles => Set<DistributorProfile>();
     public DbSet<KycApplication> KycApplications => Set<KycApplication>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
     public DbSet<KycDocument> KycDocuments => Set<KycDocument>();
     public DbSet<KycReview> KycReviews => Set<KycReview>();
     public DbSet<ProduceCategory> ProduceCategories => Set<ProduceCategory>();

@@ -15,7 +15,8 @@ internal sealed class FarmerProfileConfiguration : IEntityTypeConfiguration<Farm
         builder.ConfigureRequiredText(x => x.FarmLocationText);
         builder.ConfigureOptionalDecimal(x => x.FarmLatitude, 9, 6);
         builder.ConfigureOptionalDecimal(x => x.FarmLongitude, 9, 6);
-        builder.Property(x => x.IsPublic).HasDefaultValue(true);
+        builder.Property(x => x.IsPublic)
+            .HasDefaultValue(true);
         builder.ConfigureCreatedAt(x => x.CreatedAt);
         builder.ConfigureUpdatedAt(x => x.UpdatedAt);
         builder.HasOne<User>()

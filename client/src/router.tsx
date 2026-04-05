@@ -2,10 +2,15 @@ import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 import AdminDashboard from "./pages/admin/Dashboard";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { ErrorPage } from "./pages/ErrorPage";
+import { ProtectedRoute } from "./features/auth";
 import { FarmerProfilePage } from "./pages/FarmerProfilePage";
 import { Landing } from "./pages/Landing";
+import { AccessDenied } from "./pages/auth/AccessDenied";
+import { AuthAccessCheck } from "./pages/auth/AuthAccessCheck";
+import { AccessPending } from "./pages/auth/AccessPending";
 import { Login } from "./pages/auth/Login";
 import { SignUp } from "./pages/auth/SignUp";
+import { VerifyEmail } from "./pages/auth/VerifyEmail";
 import Assistant from "./pages/assistant/Assistant";
 import BuyersDashboard from "./pages/buyers/Dashboard";
 import BuyersMarketplace from "./pages/buyers/Marketplace";
@@ -19,6 +24,7 @@ import FarmerWallet from "./pages/farmer/Wallet";
 import { MessagesPage } from "./pages/MessagesPage";
 import { OrderDetailsPage } from "./pages/OrderDetailsPage";
 import { ProductDetailsPage } from "./pages/ProductDetailsPage";
+import { isAuthAccessCheckRouteEnabled } from "./features/auth/utils/authAccessCheck";
 
 export const router = createBrowserRouter([
   {
@@ -39,8 +45,31 @@ export const router = createBrowserRouter([
         Component: Login,
       },
       {
+        path: "verify-email",
+        Component: VerifyEmail,
+      },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          {
+            path: "access-pending",
+            Component: AccessPending,
+          },
+          {
+            path: "access-denied",
+            Component: AccessDenied,
+          },
+        ],
+      },
+      {
         path: "admin",
-        Component: AdminDashboard,
+        element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
+        children: [
+          {
+            index: true,
+            Component: AdminDashboard,
+          },
+        ],
       },
       {
         path: "assistant",
@@ -48,43 +77,72 @@ export const router = createBrowserRouter([
       },
       {
         path: "checkout",
-        Component: CheckoutPage,
+        element: <ProtectedRoute allowedRoles={["BUYER"]} />,
+        children: [
+          {
+            index: true,
+            Component: CheckoutPage,
+          },
+        ],
       },
       {
-        path: "buyers/dashboard",
-        Component: BuyersDashboard,
+        element: <ProtectedRoute allowedRoles={["BUYER"]} />,
+        children: [
+          {
+            path: "buyers/dashboard",
+            Component: BuyersDashboard,
+          },
+          {
+            path: "buyers/marketplace",
+            Component: BuyersMarketplace,
+          },
+          {
+            path: "buyers/wallet",
+            Component: BuyersWallet,
+          },
+          {
+            path: "orders",
+            element: <Navigate replace to="/orders/TA-8821" />,
+          },
+          {
+            path: "orders/:id",
+            Component: OrderDetailsPage,
+          },
+        ],
       },
       {
-        path: "buyers/marketplace",
-        Component: BuyersMarketplace,
+        element: <ProtectedRoute allowedRoles={["FARMER"]} />,
+        children: [
+          {
+            path: "farmer/dashboard",
+            Component: FarmerDashboard,
+          },
+          {
+            path: "farmer/analytics",
+            Component: FarmerAnalytics,
+          },
+          {
+            path: "farmer/wallet",
+            Component: FarmerWallet,
+          },
+        ],
       },
       {
-        path: "buyers/wallet",
-        Component: BuyersWallet,
-      },
-      {
-        path: "farmer/dashboard",
-        Component: FarmerDashboard,
-      },
-      {
-        path: "farmer/analytics",
-        Component: FarmerAnalytics,
-      },
-      {
-        path: "farmer/wallet",
-        Component: FarmerWallet,
-      },
-      {
-        path: "distributor/dashboard",
-        Component: DistributorDashboard,
-      },
-      {
-        path: "distributor/qa-reporting",
-        Component: QaReporting,
-      },
-      {
-        path: "distributor/wallet",
-        Component: DistributorWallet,
+        element: <ProtectedRoute allowedRoles={["DISTRIBUTOR"]} />,
+        children: [
+          {
+            path: "distributor/dashboard",
+            Component: DistributorDashboard,
+          },
+          {
+            path: "distributor/qa-reporting",
+            Component: QaReporting,
+          },
+          {
+            path: "distributor/wallet",
+            Component: DistributorWallet,
+          },
+        ],
       },
       {
         path: "farmer/:id",
@@ -95,17 +153,23 @@ export const router = createBrowserRouter([
         Component: MessagesPage,
       },
       {
-        path: "orders",
-        element: <Navigate replace to="/orders/TA-8821" />,
-      },
-      {
-        path: "orders/:id",
-        Component: OrderDetailsPage,
-      },
-      {
         path: "product/:id",
         Component: ProductDetailsPage,
       },
+      ...(isAuthAccessCheckRouteEnabled
+        ? [
+            {
+              // TODO(auth-check): Remove this temporary frontend auth verification route after auth QA/UAT sign-off.
+              element: <ProtectedRoute />,
+              children: [
+                {
+                  path: "auth-check",
+                  element: <AuthAccessCheck />,
+                },
+              ],
+            },
+          ]
+        : []),
       {
         path: "*",
         element: <Navigate replace to="/" />,

@@ -21,8 +21,10 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.ConfigureRequiredVarchar(x => x.LastName, 100);
         builder.ConfigureOptionalVarchar(x => x.DisplayName, 150);
         builder.ConfigureOptionalText(x => x.ProfilePhotoUrl);
-        builder.Property(x => x.IsEmailVerified).HasDefaultValue(false);
-        builder.Property(x => x.IsMobileVerified).HasDefaultValue(false);
+        builder.Property(x => x.IsEmailVerified)
+            .HasDefaultValue(false);
+        builder.Property(x => x.IsMobileVerified)
+            .HasDefaultValue(false);
         builder.ConfigureRequiredText(x => x.AccountStatus);
         builder.ConfigureOptionalTimestamp(x => x.LastLoginAt);
         builder.ConfigureCreatedAt(x => x.CreatedAt);

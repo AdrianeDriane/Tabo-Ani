@@ -19,7 +19,7 @@ namespace TaboAni.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("ProductVersion", "10.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -591,6 +591,55 @@ namespace TaboAni.Api.Migrations
                         .HasDatabaseName("ix_distributor_profiles_user_id");
 
                     b.ToTable("distributor_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.EmailVerificationToken", b =>
+                {
+                    b.Property<Guid>("EmailVerificationTokenId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("email_verification_token_id");
+
+                    b.Property<DateTimeOffset?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset?>("InvalidatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invalidated_at");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("EmailVerificationTokenId")
+                        .HasName("pk_email_verification_tokens");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ux_email_verification_tokens_token_hash");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("ix_email_verification_tokens_user_id_created_at");
+
+                    b.HasIndex("UserId", "ExpiresAt")
+                        .HasDatabaseName("ix_email_verification_tokens_user_id_expires_at");
+
+                    b.ToTable("email_verification_tokens", (string)null);
                 });
 
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.EscrowTransaction", b =>
@@ -1985,6 +2034,54 @@ namespace TaboAni.Api.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("RefreshTokenId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("refresh_token_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<DateTimeOffset?>("InvalidatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invalidated_at");
+
+                    b.Property<bool>("IsPersistent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_persistent");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("RefreshTokenId")
+                        .HasName("pk_refresh_tokens");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ux_refresh_tokens_token_hash");
+
+                    b.HasIndex("UserId", "ExpiresAt")
+                        .HasDatabaseName("ix_refresh_tokens_user_id_expires_at");
+
+                    b.ToTable("refresh_tokens", (string)null);
+                });
+
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.Role", b =>
                 {
                     b.Property<Guid>("RoleId")
@@ -2118,6 +2215,46 @@ namespace TaboAni.Api.Migrations
                         {
                             t.HasCheckConstraint("ck_users_contact", "\"email\" IS NOT NULL OR \"mobile_number\" IS NOT NULL");
                         });
+                });
+
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.UserPolicyAcceptance", b =>
+                {
+                    b.Property<Guid>("UserPolicyAcceptanceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_policy_acceptance_id");
+
+                    b.Property<DateTimeOffset>("AcceptedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("accepted_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("PolicyType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("policy_type");
+
+                    b.Property<string>("PolicyVersion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("policy_version");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("UserPolicyAcceptanceId")
+                        .HasName("pk_user_policy_acceptances");
+
+                    b.HasIndex("UserId", "PolicyType", "AcceptedAt")
+                        .HasDatabaseName("ix_user_policy_acceptances_user_id_policy_type_accepted_at");
+
+                    b.ToTable("user_policy_acceptances", (string)null);
                 });
 
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.UserRole", b =>
@@ -2479,6 +2616,26 @@ namespace TaboAni.Api.Migrations
                         .HasConstraintName("fk_distributor_profiles_users_user_id");
                 });
 
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.EmailVerificationToken", b =>
+                {
+                    b.HasOne("TaboAni.Api.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_email_verification_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("TaboAni.Api.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_refresh_tokens_users_user_id");
+                });
+
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.EscrowTransaction", b =>
                 {
                     b.HasOne("TaboAni.Api.Domain.Entities.FarmerPayout", null)
@@ -2816,6 +2973,16 @@ namespace TaboAni.Api.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_reviews_users_reviewer_user_id");
+                });
+
+            modelBuilder.Entity("TaboAni.Api.Domain.Entities.UserPolicyAcceptance", b =>
+                {
+                    b.HasOne("TaboAni.Api.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_policy_acceptances_users_user_id");
                 });
 
             modelBuilder.Entity("TaboAni.Api.Domain.Entities.UserRole", b =>

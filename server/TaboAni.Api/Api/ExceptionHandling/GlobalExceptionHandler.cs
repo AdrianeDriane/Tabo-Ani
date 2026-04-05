@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TaboAni.Api.Application.DTOs.Response;
 using TaboAni.Api.Domain.Exceptions;
 
@@ -19,6 +21,10 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                 (int)domainException.StatusCode,
                 ResolveDomainMessage(domainException),
                 new[] { $"{domainException.Code}: {domainException.Message}" }),
+            DbUpdateException dbUpdateException when ResolveUniqueConstraintViolation(dbUpdateException) is { } uniqueConstraintError => (
+                StatusCodes.Status409Conflict,
+                "The request conflicts with existing data.",
+                new[] { uniqueConstraintError }),
             ArgumentException argumentException => (
                 StatusCodes.Status400BadRequest,
                 "Request validation failed.",
@@ -54,9 +60,27 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
     {
         return (int)domainException.StatusCode switch
         {
+            StatusCodes.Status401Unauthorized => "Authentication failed.",
             StatusCodes.Status403Forbidden => "You do not have access to the requested resource.",
             StatusCodes.Status404NotFound => "The requested resource was not found.",
+            StatusCodes.Status409Conflict => "The request conflicts with existing data.",
             _ => "Domain validation failed."
+        };
+    }
+
+    private static string? ResolveUniqueConstraintViolation(DbUpdateException dbUpdateException)
+    {
+        if (dbUpdateException.InnerException is not PostgresException postgresException ||
+            postgresException.SqlState != PostgresErrorCodes.UniqueViolation)
+        {
+            return null;
+        }
+
+        return postgresException.ConstraintName switch
+        {
+            "uq_users_email" => "signup.duplicate_credential: Email is already in use.",
+            "uq_users_mobile_number" => "signup.duplicate_credential: Mobile number is already in use.",
+            _ => "data.unique_conflict: The submitted data conflicts with an existing record."
         };
     }
 }

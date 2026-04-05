@@ -2,6 +2,9 @@
 .DS_Store
 Thumbs.db
 .idea/
+.artifacts/
+.dotnet/
+.dotnet-home/
 .vscode/*
 !.vscode/extensions.json
 
@@ -27,10 +30,18 @@ client/*.local
 # Server: ASP.NET Core / EF Core
 server/**/bin/
 server/**/obj/
+server/**/artifacts/
+server/**/publish/
+server/**/out/
+server/**/TestResults/
+server/**/BenchmarkDotNet.Artifacts/
 server/**/.vs/
 server/**/*.user
 server/**/*.rsuser
 server/**/*.suo
+server/**/*.cache
+server/**/*.nupkg
+server/**/*.snupkg
 
 # Local app data and generated SQL
 server/TaboAni.Api/.env

@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { SignupBrandPanelContent } from "../../types/signup.types";
+import {
+  PRIVACY_POLICY_URL,
+  TERMS_OF_SERVICE_URL,
+} from "../../constants/authPolicies";
 import { SignupBrandPanel } from "./SignupBrandPanel";
 import { SignupProgress } from "./SignupProgress";
 
@@ -16,9 +20,9 @@ type SignupShellProps = {
 };
 
 const LEGAL_LINKS = [
-  { label: "Terms of Service", to: "/" },
-  { label: "Privacy Policy", to: "/" },
-  { label: "Help Center", to: "/" },
+  { label: "Terms of Service", href: TERMS_OF_SERVICE_URL },
+  { label: "Privacy Policy", href: PRIVACY_POLICY_URL },
+  { label: "Help Center", href: "/" },
 ];
 
 export function SignupShell({
@@ -94,13 +98,15 @@ export function SignupShell({
 
               <div className="mt-12 flex flex-wrap justify-center gap-x-8 gap-y-2 text-[11px] font-medium tracking-widest text-slate-400 uppercase">
                 {LEGAL_LINKS.map((link) => (
-                  <Link
+                  <a
                     key={link.label}
-                    to={link.to}
+                    href={link.href}
+                    target={link.href.startsWith("http") ? "_blank" : undefined}
+                    rel={link.href.startsWith("http") ? "noreferrer" : undefined}
                     className="transition-colors hover:text-agri-leaf"
                   >
                     {link.label}
-                  </Link>
+                  </a>
                 ))}
               </div>
             </div>

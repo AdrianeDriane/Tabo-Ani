@@ -73,7 +73,19 @@ Do not make one commit per file unless that is actually the cleanest logical gro
 
 Do not create a single commit for all changes unless the diff truly represents one indivisible implementation stage.
 
-Prefer a small number of meaningful commits over many tiny noisy commits.
+Prefer the smallest set of commits that still keeps each commit reviewable, coherent, and independently understandable.
+
+A commit should usually represent one narrow implementation step, not an entire feature branch worth of work.
+
+If a proposed commit touches many files, explicitly check whether it can be split into smaller commits by:
+
+- schema or model preparation
+- service or backend logic
+- controller or API surface changes
+- UI wiring
+- validation/error handling
+- cleanup/refactor
+- docs/config
 
 ### Step 4: Prepare a commit plan
 
@@ -197,3 +209,24 @@ A good result is:
 - correct git identity
 - explicit user approval
 - no hidden execution
+
+## Reviewability Standard
+
+Do not propose oversized commits.
+
+If a commit would include a large number of files, first attempt to split it into smaller reviewable commits unless doing so would create broken intermediate states.
+
+As a rule of thumb:
+
+- prefer narrow commits over broad commits
+- prefer hunk-based splitting when unrelated changes exist in the same file
+- avoid bundling setup, feature logic, refactor, and cleanup into one commit
+
+Before finalizing the commit plan, challenge each proposed commit by asking:
+
+- Can this commit be understood on its own?
+- Is it doing more than one kind of change?
+- Can reviewers verify it without mentally separating unrelated edits?
+- Can some files or hunks move to an earlier or later commit?
+
+If yes, split further.
