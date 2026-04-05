@@ -1,17 +1,50 @@
 import type { FormEvent } from "react";
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import type { AppDispatch, RootState } from "../../../../store";
+import { loginUser } from "../../authSlice";
+import { resolvePostLoginPath } from "../../utils/redirects";
 
 const HERO_IMAGE_URL =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuD1YrUv4NDMS7DVCbp5p3DmxAC_HSDHcqqVvr0CL_s4mfDvlr2TZFtoQOSdLWNSKvlo9ScJo9uEMjCTTCnwt8rGCN8geAT85Egv8-Q7JNJ3QuhXKjoGxsGmnuxfVjo1iJxtQ8va5GXmeIIYp6MwoLNPYEWkxHZ_-io1_O8ndRYVKTh2UFPXWBPRtEuzqOle1_QsA75oZ5MTeVuTcf-TEzqrD4Oo_RNx5VJuhXZuhamfN0-bqydwiqKOYhzXnCQ-3BEtDM2fheAXGDo2";
 
 export function LoginPage() {
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const auth = useSelector((state: RootState) => state.auth);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const hasEmailVerifiedNotice = searchParams.get("emailVerified") === "1";
+  const isSubmitting = auth.loginStatus === "pending";
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (auth.sessionStatus !== "authenticated") {
+      return;
+    }
+
+    navigate(resolvePostLoginPath(auth.user?.roles), { replace: true });
+  }, [auth.sessionStatus, auth.user?.roles, navigate]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    try {
+      const session = await dispatch(
+        loginUser({
+          email: email.trim(),
+          password,
+          rememberMe,
+        })
+      ).unwrap();
+
+      navigate(resolvePostLoginPath(session.user.roles), { replace: true });
+    } catch {
+      // Slice state already captures the user-facing error.
+    }
   }
 
   return (
@@ -56,7 +89,7 @@ export function LoginPage() {
         </aside>
 
         <section className="min-h-0 flex-1 overflow-y-auto bg-agri-light">
-          <div className="mx-auto flex w-full max-w-140 flex-col px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-8 xl:px-10 h-full 2xl:justify-center">
+          <div className="mx-auto h-full w-full max-w-140 flex-col px-4 py-6 sm:px-6 sm:py-8 lg:flex lg:px-8 lg:py-8 xl:px-10 2xl:justify-center">
             <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
               <div className="flex size-10 items-center justify-center rounded-xl bg-agri-accent p-2 shadow-lg">
                 <span className="font-display text-xl font-extrabold text-white">
@@ -76,6 +109,11 @@ export function LoginPage() {
                     Tabo-Ani account.
                   </div>
                 ) : null}
+                {auth.loginError ? (
+                  <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {auth.loginError}
+                  </div>
+                ) : null}
                 <h2 className="mb-2 font-display text-3xl font-extrabold text-slate-900">
                   Login
                 </h2>
@@ -87,16 +125,21 @@ export function LoginPage() {
               <form className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <label
-                    htmlFor="login-identifier"
+                    htmlFor="login-email"
                     className="ml-1 block text-sm font-semibold text-slate-700"
                   >
-                    Email or Mobile Number
+                    Email Address
                   </label>
                   <input
-                    id="login-identifier"
-                    type="text"
-                    placeholder="Enter your email or mobile"
-                    className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:border-agri-accent focus:ring-2 focus:ring-agri-accent sm:h-14 sm:px-5"
+                    id="login-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    disabled={isSubmitting}
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="Enter your email address"
+                    className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:border-agri-accent focus:ring-2 focus:ring-agri-accent disabled:cursor-not-allowed disabled:opacity-60 sm:h-14 sm:px-5"
                   />
                 </div>
 
@@ -119,8 +162,13 @@ export function LoginPage() {
                     <input
                       id="login-password"
                       type={isPasswordVisible ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      disabled={isSubmitting}
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
                       placeholder="Enter your password"
-                      className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:border-agri-accent focus:ring-2 focus:ring-agri-accent sm:h-14 sm:px-5"
+                      className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:border-agri-accent focus:ring-2 focus:ring-agri-accent disabled:cursor-not-allowed disabled:opacity-60 sm:h-14 sm:px-5"
                     />
                     <button
                       type="button"
@@ -140,6 +188,8 @@ export function LoginPage() {
                   <input
                     id="remember"
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(event) => setRememberMe(event.target.checked)}
                     className="size-5 rounded border-slate-300 text-agri-accent focus:ring-agri-accent"
                   />
                   <label
@@ -152,9 +202,10 @@ export function LoginPage() {
 
                 <button
                   type="submit"
-                  className="flex h-12 w-full items-center justify-center rounded-full bg-agri-accent text-base font-bold text-white shadow-lg shadow-agri-accent/25 transition-all active:scale-[0.98] hover:bg-agri-accent/90 sm:h-14 sm:text-lg"
+                  disabled={isSubmitting}
+                  className="flex h-12 w-full items-center justify-center rounded-full bg-agri-accent text-base font-bold text-white shadow-lg shadow-agri-accent/25 transition-all active:scale-[0.98] hover:bg-agri-accent/90 disabled:cursor-not-allowed disabled:opacity-60 sm:h-14 sm:text-lg"
                 >
-                  Log In
+                  {isSubmitting ? "Logging In..." : "Log In"}
                 </button>
 
                 <div className="relative flex items-center py-1">
@@ -197,7 +248,7 @@ export function LoginPage() {
 
               <div className="mt-8 text-center sm:mt-10">
                 <p className="font-medium text-slate-600">
-                  Don't have an account?
+                  Don&apos;t have an account?
                   <Link
                     to="/signup"
                     className="ml-1 font-bold text-agri-accent hover:underline"

@@ -2,6 +2,7 @@ import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 import AdminDashboard from "./pages/admin/Dashboard";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { ErrorPage } from "./pages/ErrorPage";
+import { ProtectedRoute } from "./features/auth";
 import { FarmerProfilePage } from "./pages/FarmerProfilePage";
 import { Landing } from "./pages/Landing";
 import { Login } from "./pages/auth/Login";
@@ -45,7 +46,13 @@ export const router = createBrowserRouter([
       },
       {
         path: "admin",
-        Component: AdminDashboard,
+        element: <ProtectedRoute allowedRoles={["ADMIN"]} />,
+        children: [
+          {
+            index: true,
+            Component: AdminDashboard,
+          },
+        ],
       },
       {
         path: "assistant",
@@ -53,43 +60,72 @@ export const router = createBrowserRouter([
       },
       {
         path: "checkout",
-        Component: CheckoutPage,
+        element: <ProtectedRoute allowedRoles={["BUYER"]} />,
+        children: [
+          {
+            index: true,
+            Component: CheckoutPage,
+          },
+        ],
       },
       {
-        path: "buyers/dashboard",
-        Component: BuyersDashboard,
+        element: <ProtectedRoute allowedRoles={["BUYER"]} />,
+        children: [
+          {
+            path: "buyers/dashboard",
+            Component: BuyersDashboard,
+          },
+          {
+            path: "buyers/marketplace",
+            Component: BuyersMarketplace,
+          },
+          {
+            path: "buyers/wallet",
+            Component: BuyersWallet,
+          },
+          {
+            path: "orders",
+            element: <Navigate replace to="/orders/TA-8821" />,
+          },
+          {
+            path: "orders/:id",
+            Component: OrderDetailsPage,
+          },
+        ],
       },
       {
-        path: "buyers/marketplace",
-        Component: BuyersMarketplace,
+        element: <ProtectedRoute allowedRoles={["FARMER"]} />,
+        children: [
+          {
+            path: "farmer/dashboard",
+            Component: FarmerDashboard,
+          },
+          {
+            path: "farmer/analytics",
+            Component: FarmerAnalytics,
+          },
+          {
+            path: "farmer/wallet",
+            Component: FarmerWallet,
+          },
+        ],
       },
       {
-        path: "buyers/wallet",
-        Component: BuyersWallet,
-      },
-      {
-        path: "farmer/dashboard",
-        Component: FarmerDashboard,
-      },
-      {
-        path: "farmer/analytics",
-        Component: FarmerAnalytics,
-      },
-      {
-        path: "farmer/wallet",
-        Component: FarmerWallet,
-      },
-      {
-        path: "distributor/dashboard",
-        Component: DistributorDashboard,
-      },
-      {
-        path: "distributor/qa-reporting",
-        Component: QaReporting,
-      },
-      {
-        path: "distributor/wallet",
-        Component: DistributorWallet,
+        element: <ProtectedRoute allowedRoles={["DISTRIBUTOR"]} />,
+        children: [
+          {
+            path: "distributor/dashboard",
+            Component: DistributorDashboard,
+          },
+          {
+            path: "distributor/qa-reporting",
+            Component: QaReporting,
+          },
+          {
+            path: "distributor/wallet",
+            Component: DistributorWallet,
+          },
+        ],
       },
       {
         path: "farmer/:id",
@@ -98,14 +134,6 @@ export const router = createBrowserRouter([
       {
         path: "messages",
         Component: MessagesPage,
-      },
-      {
-        path: "orders",
-        element: <Navigate replace to="/orders/TA-8821" />,
-      },
-      {
-        path: "orders/:id",
-        Component: OrderDetailsPage,
       },
       {
         path: "product/:id",
