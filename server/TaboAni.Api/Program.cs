@@ -1,6 +1,10 @@
+using System.Security.Claims;
 using System.Threading.RateLimiting;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using TaboAni.Api.ExceptionHandling;
 using TaboAni.Api.Application.Configuration;
@@ -23,7 +27,16 @@ DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 var frontendOptions = builder.Configuration.GetSection(FrontendOptions.SectionName).Get<FrontendOptions>() ?? new FrontendOptions();
+var authOptions = builder.Configuration.GetSection(AuthOptions.SectionName).Get<AuthOptions>() ?? new AuthOptions();
 var authRateLimitOptions = builder.Configuration.GetSection(AuthRateLimitOptions.SectionName).Get<AuthRateLimitOptions>() ?? new AuthRateLimitOptions();
+var effectiveSigningKey = string.IsNullOrWhiteSpace(authOptions.SigningKey)
+    ? new string('x', 32)
+    : authOptions.SigningKey.Trim();
+
+if (!shouldSeedFarmerData && !shouldSeedPlatformRoles)
+{
+    ValidateAuthOptions(authOptions);
+}
 
 var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException(
@@ -47,12 +60,71 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddApiDocumentation();
 builder.Services.AddApplicationDependencies();
+builder.Services.AddHttpContextAccessor();
+builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection(AuthOptions.SectionName));
 builder.Services.Configure<FrontendOptions>(builder.Configuration.GetSection(FrontendOptions.SectionName));
 builder.Services.Configure<EmailVerificationOptions>(builder.Configuration.GetSection(EmailVerificationOptions.SectionName));
 builder.Services.Configure<SignupPolicyOptions>(builder.Configuration.GetSection(SignupPolicyOptions.SectionName));
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection(SmtpOptions.SectionName));
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = authOptions.UseSecureRefreshTokenCookie;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = authOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = authOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(effectiveSigningKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = ClaimTypes.NameIdentifier,
+            RoleClaimType = ClaimTypes.Role
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = async context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/json";
+
+                await context.Response.WriteAsJsonAsync(new ErrorResponseDto
+                {
+                    Success = false,
+                    Message = "Authentication failed.",
+                    Errors = ["auth.unauthorized: Access token is missing, invalid, or expired."]
+                });
+            },
+            OnForbidden = async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/json";
+
+                await context.Response.WriteAsJsonAsync(new ErrorResponseDto
+                {
+                    Success = false,
+                    Message = "You do not have access to the requested resource.",
+                    Errors = ["auth.forbidden: The authenticated user is not allowed to access this resource."]
+                });
+            }
+        };
+    });
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthPolicyNames.Admin, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("ADMIN"));
+    options.AddPolicy(AuthPolicyNames.Farmer, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("FARMER"));
+    options.AddPolicy(AuthPolicyNames.Buyer, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("BUYER"));
+    options.AddPolicy(AuthPolicyNames.Distributor, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("DISTRIBUTOR"));
+});
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -102,7 +174,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(ResolveAllowedOrigins(frontendOptions))
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -137,6 +210,8 @@ app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseRateLimiter();
 app.UseCors("Frontend");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
@@ -176,6 +251,25 @@ static RateLimitPartition<string> CreateAuthRateLimitPartition(
             QueueLimit = queueLimit,
             AutoReplenishment = true
         });
+}
+
+static void ValidateAuthOptions(AuthOptions authOptions)
+{
+    if (string.IsNullOrWhiteSpace(authOptions.SigningKey) || authOptions.SigningKey.Trim().Length < 32)
+    {
+        throw new InvalidOperationException(
+            "Missing Auth:SigningKey. Set a strong secret with at least 32 characters in server/TaboAni.Api/.env.");
+    }
+
+    if (authOptions.AccessTokenLifetimeMinutes <= 0)
+    {
+        throw new InvalidOperationException("Auth:AccessTokenLifetimeMinutes must be greater than zero.");
+    }
+
+    if (authOptions.RefreshTokenLifetimeDays <= 0)
+    {
+        throw new InvalidOperationException("Auth:RefreshTokenLifetimeDays must be greater than zero.");
+    }
 }
 
 public partial class Program

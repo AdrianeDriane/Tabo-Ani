@@ -1,5 +1,20 @@
 namespace TaboAni.Api.Application.Configuration;
 
+public sealed class AuthOptions
+{
+    public const string SectionName = "Auth";
+
+    public string Issuer { get; init; } = "TaboAni.Api";
+    public string Audience { get; init; } = "TaboAni.Client";
+    public string SigningKey { get; init; } = string.Empty;
+    public int AccessTokenLifetimeMinutes { get; init; } = 15;
+    public int RefreshTokenLifetimeDays { get; init; } = 7;
+    public string RefreshTokenCookieName { get; init; } = "taboani_refresh_token";
+    public string RefreshTokenCookiePath { get; init; } = "/api/v1/auth";
+    public string RefreshTokenCookieSameSite { get; init; } = "None";
+    public bool UseSecureRefreshTokenCookie { get; init; } = true;
+}
+
 public sealed class FrontendOptions
 {
     public const string SectionName = "Frontend";

@@ -60,6 +60,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
     {
         return (int)domainException.StatusCode switch
         {
+            StatusCodes.Status401Unauthorized => "Authentication failed.",
             StatusCodes.Status403Forbidden => "You do not have access to the requested resource.",
             StatusCodes.Status404NotFound => "The requested resource was not found.",
             StatusCodes.Status409Conflict => "The request conflicts with existing data.",
