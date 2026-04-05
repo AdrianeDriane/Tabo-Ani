@@ -1,5 +1,6 @@
 using Mapster;
 using TaboAni.Api.Application.Configuration.MapsterConfiguration;
+using TaboAni.Api.Application.Guards;
 using TaboAni.Api.Application.Implementations.Service;
 using TaboAni.Api.Application.Interfaces.Repository;
 using TaboAni.Api.Application.Interfaces.Security;
@@ -25,7 +26,9 @@ public static class DependencyInjectionExtension
         services.AddScoped<IMarketplaceService, MarketplaceService>();
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<AuthOwnershipGuard>();
         services.AddSingleton<IPasswordHasher, Pbkdf2PasswordHasher>();
+        services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
         services.AddScoped<IEmailVerificationNotifier, GmailSmtpEmailVerificationNotifier>();
 
         return services;

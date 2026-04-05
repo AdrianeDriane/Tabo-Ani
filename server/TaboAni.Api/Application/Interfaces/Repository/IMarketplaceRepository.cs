@@ -16,6 +16,7 @@ public interface IMarketplaceRepository
 
     Task<bool> FarmerProfileExistsAsync(Guid farmerProfileId, CancellationToken cancellationToken = default);
     Task<bool> ProduceCategoryExistsAsync(Guid produceCategoryId, CancellationToken cancellationToken = default);
+    Task<Guid?> GetFarmerProfileOwnerUserIdAsync(Guid farmerProfileId, CancellationToken cancellationToken = default);
     Task AddListingAsync(ProduceListing listing, CancellationToken cancellationToken = default);
     Task AddListingVehicleTypeAsync(FarmerListingVehicleType listingVehicleType, CancellationToken cancellationToken = default);
     Task AddInventoryBatchAsync(ProduceInventoryBatch inventoryBatch, CancellationToken cancellationToken = default);

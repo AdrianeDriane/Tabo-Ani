@@ -1,19 +1,27 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TaboAni.Api.Application.Configuration;
 using TaboAni.Api.Application.DTOs.Request;
 using TaboAni.Api.Application.DTOs.Response;
+using TaboAni.Api.Application.Guards;
 using TaboAni.Api.Application.Interfaces.Service;
 
 namespace TaboAni.Api.Controllers.V1;
 
 [ApiController]
+[Authorize(Policy = AuthPolicyNames.Farmer)]
 [Route("api/v1/farmers/{farmerProfileId:guid}/listings")]
-public sealed class FarmerListingsController(IMarketplaceService marketplaceService) : ControllerBase
+public sealed class FarmerListingsController(
+    IMarketplaceService marketplaceService,
+    AuthOwnershipGuard authOwnershipGuard) : ControllerBase
 {
     private readonly IMarketplaceService _marketplaceService = marketplaceService;
+    private readonly AuthOwnershipGuard _authOwnershipGuard = authOwnershipGuard;
 
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponseDto<FarmerProduceListingDetailResponseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorResponseDto), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateListing(
@@ -21,6 +29,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] CreateProduceListingRequestDto request,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var listing = await _marketplaceService.CreateListingAsync(farmerProfileId, request, cancellationToken);
 
         return CreatedAtAction(
@@ -46,6 +55,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] UpdateProduceListingRequestDto request,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var listing = await _marketplaceService.UpdateListingAsync(farmerProfileId, listingId, request, cancellationToken);
 
         return Ok(new ApiResponseDto<FarmerProduceListingDetailResponseDto>
@@ -68,6 +78,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] ChangeProduceListingStatusRequestDto request,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var listing = await _marketplaceService.ChangeListingStatusAsync(farmerProfileId, listingId, request, cancellationToken);
 
         return Ok(new ApiResponseDto<FarmerProduceListingDetailResponseDto>
@@ -88,6 +99,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         Guid listingId,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var listing = await _marketplaceService.GetFarmerListingDetailAsync(farmerProfileId, listingId, cancellationToken);
 
         return Ok(new ApiResponseDto<FarmerProduceListingDetailResponseDto>
@@ -111,6 +123,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] AssignListingVehicleTypeRequestDto request,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var allowedVehicleTypes = await _marketplaceService.AssignAllowedVehicleTypeAsync(
             farmerProfileId,
             listingId,
@@ -137,6 +150,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         Guid vehicleTypeId,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var allowedVehicleTypes = await _marketplaceService.RemoveAllowedVehicleTypeAsync(
             farmerProfileId,
             listingId,
@@ -161,6 +175,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         Guid listingId,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var allowedVehicleTypes = await _marketplaceService.GetAllowedVehicleTypesAsync(
             farmerProfileId,
             listingId,
@@ -186,6 +201,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] CreateInventoryBatchRequestDto request,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var batch = await _marketplaceService.CreateInventoryBatchAsync(
             farmerProfileId,
             listingId,
@@ -216,6 +232,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] UpdateInventoryBatchRequestDto request,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var batch = await _marketplaceService.UpdateInventoryBatchAsync(
             farmerProfileId,
             listingId,
@@ -241,6 +258,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         Guid listingId,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var inventory = await _marketplaceService.GetListingInventoryAsync(farmerProfileId, listingId, cancellationToken);
 
         return Ok(new ApiResponseDto<FarmerListingInventoryResponseDto>
@@ -263,6 +281,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromBody] UpdateListingPriceRequestDto request,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var result = await _marketplaceService.UpdateListingPriceAsync(
             farmerProfileId,
             listingId,
@@ -289,6 +308,7 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
         [FromQuery] FarmerOwnListingsQueryRequestDto query,
         CancellationToken cancellationToken)
     {
+        await EnsureAuthorizedFarmerProfileAsync(farmerProfileId, cancellationToken);
         var listings = await _marketplaceService.GetFarmerListingsAsync(farmerProfileId, query, cancellationToken);
 
         return Ok(new ApiResponseDto<PagedFarmerProduceListingsResponseDto>
@@ -297,5 +317,12 @@ public sealed class FarmerListingsController(IMarketplaceService marketplaceServ
             Message = "Farmer produce listings retrieved successfully.",
             Data = listings
         });
+    }
+
+    private Task EnsureAuthorizedFarmerProfileAsync(Guid farmerProfileId, CancellationToken cancellationToken)
+    {
+        return farmerProfileId == Guid.Empty
+            ? Task.CompletedTask
+            : _authOwnershipGuard.EnsureCurrentUserOwnsFarmerProfileAsync(farmerProfileId, cancellationToken);
     }
 }
