@@ -7,6 +7,12 @@ A comprehensive digital platform connecting farmers, distributors, buyers, and r
 1. Run `npm install`
 2. Run `npm run dev`
 
+## Auth and RBAC
+
+Implementation and reuse notes for login/session handling, RBAC controller protection, frontend route guards, and the temporary auth QA routes live in:
+
+- `docs/auth-login-and-rbac.md`
+
 ## Platform Pages & Features
 
 ### 1. Landing Page (`/`)
