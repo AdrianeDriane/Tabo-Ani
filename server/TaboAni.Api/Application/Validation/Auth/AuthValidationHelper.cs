@@ -103,6 +103,16 @@ internal static class AuthValidationHelper
         return RequireValue(token, "Verification token is required.");
     }
 
+    public static ValidatedLoginRequest ValidateLoginRequest(LoginRequestDto loginRequestDto)
+    {
+        ArgumentNullException.ThrowIfNull(loginRequestDto);
+
+        return new ValidatedLoginRequest(
+            NormalizeEmail(loginRequestDto.Email),
+            RequireValue(loginRequestDto.Password, "Password is required."),
+            loginRequestDto.RememberMe);
+    }
+
     private static string NormalizeEmail(string email)
     {
         var normalizedEmail = RequireValue(email, "Email is required.").ToLowerInvariant();
@@ -175,3 +185,8 @@ internal sealed record ValidatedRoleApplication(
     string Name,
     string LocationText,
     string? BusinessType);
+
+internal sealed record ValidatedLoginRequest(
+    string Email,
+    string Password,
+    bool RememberMe);

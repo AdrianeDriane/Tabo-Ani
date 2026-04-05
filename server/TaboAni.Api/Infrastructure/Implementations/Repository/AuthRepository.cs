@@ -34,6 +34,22 @@ public sealed class AuthRepository(AppDbContext context) : IAuthRepository
         return _context.Users.SingleOrDefaultAsync(user => user.UserId == userId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<string>> GetActiveRoleCodesByUserIdAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.UserRoles
+            .AsNoTracking()
+            .Where(userRole => userRole.UserId == userId && userRole.IsActive)
+            .Join(
+                _context.Roles.AsNoTracking(),
+                userRole => userRole.RoleId,
+                role => role.RoleId,
+                (_, role) => role.RoleCode)
+            .OrderBy(roleCode => roleCode)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<KycApplication>> GetKycApplicationsByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -60,6 +76,12 @@ public sealed class AuthRepository(AppDbContext context) : IAuthRepository
     public Task AddUserRoleAsync(UserRole userRole, CancellationToken cancellationToken = default)
     {
         _context.UserRoles.Add(userRole);
+        return Task.CompletedTask;
+    }
+
+    public Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default)
+    {
+        _context.RefreshTokens.Add(refreshToken);
         return Task.CompletedTask;
     }
 
@@ -122,5 +144,13 @@ public sealed class AuthRepository(AppDbContext context) : IAuthRepository
                             token.ConsumedAt == null &&
                             token.InvalidatedAt == null)
             .ToListAsync(cancellationToken);
+    }
+
+    public Task<RefreshToken?> GetRefreshTokenByHashAsync(
+        string tokenHash,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.RefreshTokens
+            .SingleOrDefaultAsync(token => token.TokenHash == tokenHash, cancellationToken);
     }
 }

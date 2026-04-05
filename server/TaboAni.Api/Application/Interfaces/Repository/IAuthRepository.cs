@@ -9,10 +9,12 @@ public interface IAuthRepository
     Task<Role?> GetRoleByCodeAsync(string roleCode, CancellationToken cancellationToken = default);
     Task<User?> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<User?> GetUserByIdAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<string>> GetActiveRoleCodesByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<KycApplication>> GetKycApplicationsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task AddUserAsync(User user, CancellationToken cancellationToken = default);
     Task AddUserPolicyAcceptanceAsync(UserPolicyAcceptance userPolicyAcceptance, CancellationToken cancellationToken = default);
     Task AddUserRoleAsync(UserRole userRole, CancellationToken cancellationToken = default);
+    Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default);
     Task AddBuyerProfileAsync(BuyerProfile buyerProfile, CancellationToken cancellationToken = default);
     Task AddFarmerProfileAsync(FarmerProfile farmerProfile, CancellationToken cancellationToken = default);
     Task AddDistributorProfileAsync(DistributorProfile distributorProfile, CancellationToken cancellationToken = default);
@@ -23,4 +25,5 @@ public interface IAuthRepository
     Task<IReadOnlyList<EmailVerificationToken>> GetPendingEmailVerificationTokensByUserIdAsync(
         Guid userId,
         CancellationToken cancellationToken = default);
+    Task<RefreshToken?> GetRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken = default);
 }

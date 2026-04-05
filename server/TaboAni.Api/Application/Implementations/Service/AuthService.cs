@@ -1,5 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using TaboAni.Api.Application.Common;
 using TaboAni.Api.Application.Configuration;
@@ -18,6 +21,7 @@ public sealed class AuthService(
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     IEmailVerificationNotifier emailVerificationNotifier,
+    IOptions<AuthOptions> authOptions,
     IOptions<EmailVerificationOptions> emailVerificationOptions,
     IOptions<FrontendOptions> frontendOptions,
     IOptions<SignupPolicyOptions> signupPolicyOptions) : IAuthService
@@ -38,9 +42,116 @@ public sealed class AuthService(
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly IEmailVerificationNotifier _emailVerificationNotifier = emailVerificationNotifier;
+    private readonly AuthOptions _authOptions = authOptions.Value;
     private readonly EmailVerificationOptions _emailVerificationOptions = emailVerificationOptions.Value;
     private readonly FrontendOptions _frontendOptions = frontendOptions.Value;
     private readonly SignupPolicyOptions _signupPolicyOptions = signupPolicyOptions.Value;
+
+    public async Task<AuthSessionResult> LoginAsync(
+        LoginRequestDto loginRequestDto,
+        CancellationToken cancellationToken = default)
+    {
+        var validatedRequest = AuthValidationHelper.ValidateLoginRequest(loginRequestDto);
+        var user = await _unitOfWork.Auth.GetUserByEmailAsync(validatedRequest.Email, cancellationToken);
+
+        if (user is null ||
+            string.IsNullOrWhiteSpace(user.PasswordHash) ||
+            !_passwordHasher.VerifyPassword(validatedRequest.Password, user.PasswordHash))
+        {
+            throw new InvalidCredentialsException();
+        }
+
+        if (!string.Equals(user.AccountStatus, ActiveAccountStatus, StringComparison.Ordinal))
+        {
+            throw new AccountStatusNotAllowedException(user.AccountStatus);
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var roleCodes = await _unitOfWork.Auth.GetActiveRoleCodesByUserIdAsync(user.UserId, cancellationToken);
+        var refreshToken = CreateRefreshToken(user.UserId, validatedRequest.RememberMe, now);
+
+        user.LastLoginAt = now;
+        user.UpdatedAt = now;
+
+        await ServiceTransactionExecutor.ExecuteWithinTransactionAsync(_unitOfWork, async () =>
+        {
+            await _unitOfWork.Auth.AddRefreshTokenAsync(refreshToken.Entity, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
+
+        return BuildAuthSessionResult(user, roleCodes, refreshToken.Token, refreshToken.Entity.ExpiresAt, validatedRequest.RememberMe, now);
+    }
+
+    public async Task<AuthSessionResult> RefreshAsync(
+        string refreshToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            throw new InvalidRefreshTokenException();
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var tokenHash = ComputeTokenHash(refreshToken);
+        var persistedRefreshToken = await _unitOfWork.Auth.GetRefreshTokenByHashAsync(tokenHash, cancellationToken);
+
+        if (persistedRefreshToken is null ||
+            persistedRefreshToken.InvalidatedAt is not null ||
+            persistedRefreshToken.ExpiresAt <= now)
+        {
+            throw new InvalidRefreshTokenException();
+        }
+
+        var user = await _unitOfWork.Auth.GetUserByIdAsync(persistedRefreshToken.UserId, cancellationToken);
+        if (user is null)
+        {
+            throw new InvalidRefreshTokenException();
+        }
+
+        if (!string.Equals(user.AccountStatus, ActiveAccountStatus, StringComparison.Ordinal))
+        {
+            persistedRefreshToken.InvalidatedAt = now;
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            throw new AccountStatusNotAllowedException(user.AccountStatus);
+        }
+
+        var roleCodes = await _unitOfWork.Auth.GetActiveRoleCodesByUserIdAsync(user.UserId, cancellationToken);
+        var rotatedRefreshToken = CreateRefreshToken(user.UserId, persistedRefreshToken.IsPersistent, now);
+
+        await ServiceTransactionExecutor.ExecuteWithinTransactionAsync(_unitOfWork, async () =>
+        {
+            persistedRefreshToken.InvalidatedAt = now;
+            await _unitOfWork.Auth.AddRefreshTokenAsync(rotatedRefreshToken.Entity, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
+
+        return BuildAuthSessionResult(
+            user,
+            roleCodes,
+            rotatedRefreshToken.Token,
+            rotatedRefreshToken.Entity.ExpiresAt,
+            rotatedRefreshToken.Entity.IsPersistent,
+            now);
+    }
+
+    public async Task LogoutAsync(string? refreshToken, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return;
+        }
+
+        var tokenHash = ComputeTokenHash(refreshToken);
+        var persistedRefreshToken = await _unitOfWork.Auth.GetRefreshTokenByHashAsync(tokenHash, cancellationToken);
+
+        if (persistedRefreshToken is null || persistedRefreshToken.InvalidatedAt is not null)
+        {
+            return;
+        }
+
+        persistedRefreshToken.InvalidatedAt = DateTimeOffset.UtcNow;
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+    }
 
     public async Task<SignupResponseDto> SignupAsync(
         SignupRequestDto signupRequestDto,
@@ -273,11 +384,101 @@ public sealed class AuthService(
             });
     }
 
+    private GeneratedRefreshToken CreateRefreshToken(Guid userId, bool isPersistent, DateTimeOffset now)
+    {
+        var tokenBytes = RandomNumberGenerator.GetBytes(32);
+        var token = Convert.ToHexString(tokenBytes);
+
+        return new GeneratedRefreshToken(
+            token,
+            new RefreshToken
+            {
+                RefreshTokenId = Guid.NewGuid(),
+                UserId = userId,
+                TokenHash = ComputeTokenHash(token),
+                IsPersistent = isPersistent,
+                ExpiresAt = now.AddDays(_authOptions.RefreshTokenLifetimeDays),
+                CreatedAt = now
+            });
+    }
+
     private static string ComputeTokenHash(string token)
     {
         var tokenBytes = Encoding.UTF8.GetBytes(token);
         var hash = SHA256.HashData(tokenBytes);
         return Convert.ToHexString(hash);
+    }
+
+    private AuthSessionResult BuildAuthSessionResult(
+        User user,
+        IReadOnlyList<string> roleCodes,
+        string refreshToken,
+        DateTimeOffset refreshTokenExpiresAt,
+        bool persistRefreshToken,
+        DateTimeOffset issuedAt)
+    {
+        var accessTokenExpiresAt = issuedAt.AddMinutes(_authOptions.AccessTokenLifetimeMinutes);
+
+        return new AuthSessionResult(
+            new SessionResponseDto
+            {
+                AccessToken = CreateAccessToken(user, roleCodes, issuedAt, accessTokenExpiresAt),
+                AccessTokenExpiresAt = accessTokenExpiresAt,
+                User = new SessionUserResponseDto
+                {
+                    UserId = user.UserId,
+                    Email = user.Email ?? string.Empty,
+                    MobileNumber = user.MobileNumber,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    DisplayName = user.DisplayName,
+                    IsEmailVerified = user.IsEmailVerified,
+                    AccountStatus = user.AccountStatus,
+                    LastLoginAt = user.LastLoginAt,
+                    Roles = roleCodes
+                }
+            },
+            refreshToken,
+            refreshTokenExpiresAt,
+            persistRefreshToken);
+    }
+
+    private string CreateAccessToken(
+        User user,
+        IReadOnlyList<string> roleCodes,
+        DateTimeOffset issuedAt,
+        DateTimeOffset expiresAt)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_authOptions.SigningKey.Trim()));
+        var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
+            new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+            new(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+            new(JwtRegisteredClaimNames.GivenName, user.FirstName),
+            new(JwtRegisteredClaimNames.FamilyName, user.LastName)
+        };
+
+        if (!string.IsNullOrWhiteSpace(user.DisplayName))
+        {
+            claims.Add(new Claim("display_name", user.DisplayName));
+        }
+
+        foreach (var roleCode in roleCodes)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, roleCode));
+        }
+
+        var token = new JwtSecurityToken(
+            issuer: _authOptions.Issuer,
+            audience: _authOptions.Audience,
+            claims: claims,
+            notBefore: issuedAt.UtcDateTime,
+            expires: expiresAt.UtcDateTime,
+            signingCredentials: signingCredentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
     private User BuildUser(ValidatedSignupRequest validatedRequest, DateTimeOffset now)
@@ -434,4 +635,5 @@ public sealed class AuthService(
     }
 
     private sealed record GeneratedVerificationToken(string Token, EmailVerificationToken Entity);
+    private sealed record GeneratedRefreshToken(string Token, RefreshToken Entity);
 }
