@@ -6,16 +6,17 @@ import type {
   VerifyEmailRequest,
 } from "../types/signup.types";
 import type {
+  CurrentSessionResponse,
   LoginRequest,
   LogoutResponse,
   SessionResponse,
 } from "../types/auth.types";
-import type { ApiResponse, ErrorResponse } from "./authApi.types";
+import type { ApiResponse } from "./authApi.types";
 import {
   CURRENT_PRIVACY_VERSION,
   CURRENT_TERMS_VERSION,
 } from "../constants/authPolicies";
-import { API_BASE_URL } from "../../../api/config";
+import { requestJson } from "../../../api/request";
 
 type SignupRequestPayload = {
   email: string;
@@ -92,6 +93,18 @@ export async function refreshSession(): Promise<ApiResponse<SessionResponse>> {
   });
 }
 
+export async function getCurrentSession(): Promise<
+  ApiResponse<CurrentSessionResponse>
+> {
+  return requestJson<ApiResponse<CurrentSessionResponse>>(
+    "/api/v1/auth/session",
+    {
+      method: "GET",
+      credentials: "include",
+    }
+  );
+}
+
 export async function logoutSession(): Promise<ApiResponse<LogoutResponse>> {
   return requestJson<ApiResponse<LogoutResponse>>("/api/v1/auth/logout", {
     method: "POST",
@@ -130,44 +143,4 @@ export function buildSignupPayload(
         }
       : null,
   };
-}
-
-type RequestJsonOptions = {
-  method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
-  payload?: object;
-  credentials?: RequestCredentials;
-  accessToken?: string;
-};
-
-async function requestJson<T>(
-  path: string,
-  options: RequestJsonOptions
-): Promise<T> {
-  const headers: HeadersInit = {};
-
-  if (options.payload) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  if (options.accessToken) {
-    headers.Authorization = `Bearer ${options.accessToken}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: options.method,
-    headers,
-    credentials: options.credentials,
-    body: options.payload ? JSON.stringify(options.payload) : undefined,
-  });
-
-  if (!response.ok) {
-    const errorBody = (await response
-      .json()
-      .catch(() => null)) as ErrorResponse | null;
-    const errorMessage =
-      errorBody?.errors?.[0] ?? errorBody?.message ?? "Request failed.";
-    throw new Error(errorMessage);
-  }
-
-  return (await response.json()) as T;
 }

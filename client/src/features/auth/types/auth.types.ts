@@ -4,6 +4,17 @@ export type SessionRoleCode =
   | "FARMER"
   | "DISTRIBUTOR";
 
+export type AuthIssueCode =
+  | "session_expired"
+  | "account_blocked"
+  | "network_unavailable";
+
+export type AuthIssue = {
+  code: AuthIssueCode;
+  message: string;
+  accountStatus?: string | null;
+};
+
 export type SessionUser = {
   userId: string;
   email: string;
@@ -21,6 +32,18 @@ export type SessionResponse = {
   accessToken: string;
   accessTokenExpiresAt: string;
   user: SessionUser;
+};
+
+export type CurrentSessionStatus =
+  | "AUTHENTICATED"
+  | "ANONYMOUS"
+  | "SESSION_EXPIRED"
+  | "ACCOUNT_BLOCKED";
+
+export type CurrentSessionResponse = {
+  status: CurrentSessionStatus;
+  session: SessionResponse | null;
+  accountStatus: string | null;
 };
 
 export type LoginRequest = {
@@ -41,4 +64,7 @@ export type AuthState = {
   user: SessionUser | null;
   loginStatus: "idle" | "pending";
   loginError: string | null;
+  logoutStatus: "idle" | "pending";
+  logoutError: string | null;
+  lastIssue: AuthIssue | null;
 };
